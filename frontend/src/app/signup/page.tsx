@@ -79,14 +79,17 @@ export default function SignUp() {
 
     if (validateForm()) {
       try {
-        const response = await fetch("http://localhost:5000/signup", {
+        // Add logging to debug the request
+        console.log("Attempting to send signup request...");
+
+        const response = await fetch("http://localhost:3001/signup", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email: formData.email,
-            username: formData.name, // Sending name as username
+            username: formData.name,
             password: formData.password,
           }),
         });
@@ -96,19 +99,27 @@ export default function SignUp() {
           console.log("Signup successful:", data.message);
           setSuccessMessage(data.message);
           setTimeout(() => {
-            setSuccessMessage(""); // Clear success message
+            setSuccessMessage("");
           }, 2000);
-          // Optionally redirect or show success message
         } else {
           const errorData = await response.json();
-          setErrors({ ...errors, email: errorData.error || "Signup failed. Please try again." });
+          console.error("Server error:", errorData);
+          setErrors({
+            ...errors,
+            email: errorData.error || "Signup failed. Please try again.",
+          });
         }
       } catch (error) {
-        console.error("Signup error:", error);
-        setErrors({ ...errors, email: "An unexpected error occurred. Please try again later." });
+        console.error("Network error:", error);
+        setErrors({
+          ...errors,
+          email:
+            "Cannot connect to the server. Please check if the server is running.",
+        });
       }
     }
   };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -160,7 +171,10 @@ export default function SignUp() {
             placeholder="Enter your email"
             labelPlacement="outside"
             startContent={
-              <Mail className="text-default-400 pointer-events-none flex-shrink-0" size={18} />
+              <Mail
+                className="text-default-400 pointer-events-none flex-shrink-0"
+                size={18}
+              />
             }
           />
           <Input
@@ -174,7 +188,10 @@ export default function SignUp() {
             placeholder="Enter your password"
             labelPlacement="outside"
             startContent={
-              <Lock className="text-default-400 pointer-events-none flex-shrink-0" size={18} />
+              <Lock
+                className="text-default-400 pointer-events-none flex-shrink-0"
+                size={18}
+              />
             }
           />
           <Input
@@ -188,13 +205,18 @@ export default function SignUp() {
             placeholder="Re-enter your password"
             labelPlacement="outside"
             startContent={
-              <Lock className="text-default-400 pointer-events-none flex-shrink-0" size={18} />
+              <Lock
+                className="text-default-400 pointer-events-none flex-shrink-0"
+                size={18}
+              />
             }
           />
-          <Button type="submit"
-          color="primary"
-          className="w-full mt-2"
-          endContent={<LogIn size={18}/>} >
+          <Button
+            type="submit"
+            color="primary"
+            className="w-full mt-2"
+            endContent={<LogIn size={18} />}
+          >
             Sign Up
           </Button>
         </form>

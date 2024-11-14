@@ -54,7 +54,7 @@ export default function Login() {
     if (validateForm()) {
       setIsLoading(true);
       try {
-        const response = await fetch("http://localhost:5000/login", {
+        const response = await fetch("http://localhost:3001/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

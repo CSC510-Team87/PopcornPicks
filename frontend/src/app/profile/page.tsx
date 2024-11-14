@@ -22,17 +22,17 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // Fetch user name
-    axios.get("http://127.0.0.1:5000/getUserName").then((response) => {
+    axios.get("http://127.0.0.1:3001/getUserName").then((response) => {
       setUserName(response.data);
     });
 
     // Fetch user's recent movies
-    axios.get("http://127.0.0.1:5000/getRecentMovies").then((response) => {
+    axios.get("http://127.0.0.1:3001/getRecentMovies").then((response) => {
       setUserMovies(response.data);
     });
 
     // Fetch friends list and their recent movies
-    axios.get("http://127.0.0.1:5000/getFriends").then((response) => {
+    axios.get("http://127.0.0.1:3001/getFriends").then((response) => {
       setFriendsList(response.data);
       console.log("response stat", response.status)
     });
@@ -42,7 +42,7 @@ export default function ProfilePage() {
     if (recentFriendMovies[friendName]) {
       setRecentFriendMovies((prev) => ({ ...prev, [friendName]: [] }));
     } else {
-      axios.post("http://127.0.0.1:5000/getRecentFriendMovies", { friend: friendName }).then((response) => {
+      axios.post("http://127.0.0.1:3001/getRecentFriendMovies", { friend: friendName }).then((response) => {
         setRecentFriendMovies((prev) => ({ ...prev, [friendName]: response.data }));
       });
     }
@@ -50,7 +50,7 @@ export default function ProfilePage() {
 
   const addFriend = (username: string) => {
     axios
-      .post("http://127.0.0.1:5000/friend", { user: username })  // Correct JSON structure
+      .post("http://127.0.0.1:3001/friend", { user: username })  // Correct JSON structure
       .then((response) => {
         if (response.status === 200) {
           setAlertState({

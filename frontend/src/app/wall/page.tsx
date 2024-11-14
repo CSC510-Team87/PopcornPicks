@@ -29,7 +29,7 @@ export default function WallPage() {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch('http://localhost:5000/reviews');
+      const response = await fetch('http://localhost:3001/reviews');
       const data = await response.json();
       setReviews(data);
       setLoading(false);
@@ -44,7 +44,15 @@ export default function WallPage() {
     }
   };
 
-  const ReviewCard = ({ review }) => (
+  interface Review {
+    name: string;
+    username: string;
+    time: string;
+    score: number;
+    review: string;
+  }
+
+  const ReviewCard = ({ review }: { review: Review }) => (
     
     <Card className="w-full mb-4">
       <CardHeader className="flex justify-between items-center">

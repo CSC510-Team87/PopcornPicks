@@ -52,7 +52,13 @@ sys.path.remove("../../")
 app = Flask(__name__)
 app.secret_key = "secret key"
 
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
+cors = CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 user = {1: None}
 
 load_dotenv()
@@ -64,12 +70,20 @@ def before_request():
     Opens the db connection
     """
     load_dotenv()
-    g.db = mysql.connector.connect(
-        user="root",
-        password=os.getenv("DB_PASSWORD"),
-        host="127.0.0.1",
-        database="popcornpicksdb"
-    )
+    try:
+        g.db = mysql.connector.connect(
+            user="avnadmin",
+            password=os.getenv("DB_PASSWORD"),
+            host=os.getenv("DB_HOST"),
+            database="popcornpicks",
+            port = 27276
+        )
+        if g.db.is_connected():
+            print("Database connected successfully.")
+        else:
+            print("Database connection failed.")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
 
 # process this after every request
 def after_request(response):
@@ -169,20 +183,25 @@ def create_acc():
     """
     Handles creating a new account
     """
+    print("Signup endpoint hit") # Debug log
     data = request.get_json()
+    print("Received data:", data) # Debug log
 
     # Validate the input data
     if not data or "email" not in data or "username" not in data or "password" not in data:
+        print("Invalid data received") # Debug log
         return jsonify({"error": "Invalid or incomplete data"}), 400
 
     try:
         create_account(g.db, data["email"], data["username"], data["password"])
+        print("Account created successfully") # Debug log
         return jsonify({"message": "Sign up is successful"}), 200
     except Exception as e:
         # Log the exception for debugging purposes
+        print(f"Error creating account: {str(e)}") # Debug log
         app.logger.error(f"Error creating account: {str(e)}")
         return jsonify({"error": "An entry with this username or email already exists, Please try with different username."}), 500
-
+    
 
 SECRET_KEY = "popcornpicks"  
 @app.route("/login", methods=["POST"])
@@ -212,4 +231,4 @@ def login():
 
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=3001, debug=True)

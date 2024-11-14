@@ -39,7 +39,7 @@ export default function SearchPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/search', {
+      const response = await fetch('http://localhost:3001/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export default function SearchPage() {
 
   const getRecentMovies = async () => {
     try {
-      const response = await fetch('http://localhost:5000/getRecentMovies');
+      const response = await fetch('http://localhost:3001/getRecentMovies');
       const data = await response.json();
       setRecentMovies(data.map((movie: any) => movie.name));
     } catch (error) {
@@ -99,7 +99,7 @@ export default function SearchPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/predict', {
+      const response = await fetch('http://localhost:3001/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
