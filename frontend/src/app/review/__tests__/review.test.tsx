@@ -1,6 +1,6 @@
 // ReviewPage.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import ReviewPage from './page';    
+import ReviewPage from '../page';    
 import '@testing-library/jest-dom';
 import fetchMock from 'jest-fetch-mock';
 import { useRouter } from 'next/router';
