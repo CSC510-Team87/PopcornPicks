@@ -227,7 +227,58 @@ def login():
         return jsonify({"error": "Login failed, please check your credentials", "status": "fail"}), 401
 
 
+# Load the saved models
+def load_models():
+    try:
+        movies_df = pickle.load(open('../prediction_scripts/artifacts/movie_list.pkl', 'rb'))
+        similarity_matrix = pickle.load(open('../prediction_scripts/artifacts/similarity.pkl', 'rb'))
+        return movies_df, similarity_matrix
+    except Exception as e:
+        print(f"Error loading models: {str(e)}")
+        return None, None
 
+movies_df, similarity_matrix = load_models()
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        # Get the list of movies from the request
+        data = request.json
+        input_movies = data.get('movies', [])
+        
+        if not input_movies:
+            return jsonify({'error': 'No movies provided'}), 400
+            
+        # Store for recommendations
+        recommendations = set()
+        
+        # Get recommendations for each input movie
+        for movie in input_movies:
+            try:
+                # Find the movie index
+                movie_index = movies_df[movies_df['title'] == movie].index[0]
+                
+                # Get similarity scores
+                distances = sorted(
+                    list(enumerate(similarity_matrix[movie_index])),
+                    reverse=True,
+                    key=lambda x: x[1]
+                )
+                
+                # Add top 3 recommendations for each input movie
+                for i in distances[1:4]:  # Skip first as it's the movie itself
+                    recommendations.add(movies_df.iloc[i[0]].title)
+            except IndexError:
+                continue
+        
+        # Remove any input movies from recommendations
+        recommendations = list(recommendations - set(input_movies))
+        
+        # Return top 10 recommendations
+        return jsonify(recommendations[:10])
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == "__main__":
