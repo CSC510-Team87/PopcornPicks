@@ -133,16 +133,16 @@ Our grading scorecard can be found [here](https://github.com/brwali/PopcornPicks
  Step 1: 
   Git Clone the Repository 
   
-    git clone https://github.com/brwali/PopcornPicks.git
+    git clone https://github.com/CSC510-Team87/PopcornPicks.git
     
   (OR) Download the .zip file on your local machine from the following link
   
-    https://github.com/brwali/PopcornPicks
+    https://github.com/CSC510-Team87/PopcornPicks/tree/dev
   
  Step 2:
    Follow the setup instructions in the installation documentation
    
-    https://github.com/brwali/PopcornPicks/blob/master/docs/install.md
+    https://github.com/CSC510-Team87/PopcornPicks/blob/dev/docs/install.md
     
     
 <b>Finally, start enjoying personalized movie recommendations!</b>
