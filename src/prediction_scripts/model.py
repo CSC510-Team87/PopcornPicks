@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pickle
-import nltk
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -111,15 +110,15 @@ if __name__ == "__main__":
     recommender.prepare_data('../../data/movies.csv')
     
     # Get recommendations
-    recommendations = recommender.recommend('Spider-Man 2 (2004)')
-    for rec in recommendations:
-        print(rec)
+    # recommendations = recommender.recommend('Spider-Man 2 (2004)')
+    # for rec in recommendations:
+    #     print(rec)
     
     # Save model
-    # recommender.save_model()
+    recommender.save_model()
     
     # Load pre-trained model
-    loaded_recommender = MovieRecommender.load_model(
-        'artifacts/movie_list.pkl',
-        'artifacts/similarity.pkl'
-    )
+    # loaded_recommender = MovieRecommender.load_model(
+    #     'artifacts/movie_list.pkl',
+    #     'artifacts/similarity.pkl'
+    # )

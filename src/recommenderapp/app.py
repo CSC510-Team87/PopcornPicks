@@ -41,6 +41,8 @@ from utils import create_account
 from utils import login_to_account
 from search import Search
 from item_based import recommend_for_new_user
+from flask_sqlalchemy import SQLAlchemy
+
 search_instance = Search()
 
 
@@ -59,6 +61,15 @@ cors = CORS(app, resources={
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
+
+DATABASE_CONFIG = {
+    'host': 'localhost',
+    'port': 27276,
+    'user': 'root',
+    'password': 'password',
+    'database': 'popcornpicksdb'
+}
+
 user = {1: None}
 
 load_dotenv()
@@ -70,20 +81,22 @@ def before_request():
     Opens the db connection
     """
     load_dotenv()
-    try:
-        g.db = mysql.connector.connect(
-            user="avnadmin",
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            database="popcornpicks",
-            port = 27276
-        )
-        if g.db.is_connected():
+
+    if 'db' not in g:
+        try:
+            g.db = mysql.connector.connect(
+                host=DATABASE_CONFIG['host'],
+                port=DATABASE_CONFIG['port'],
+                user=DATABASE_CONFIG['user'],
+                password=DATABASE_CONFIG['password'],
+                database=DATABASE_CONFIG['database']
+            )
             print("Database connected successfully.")
-        else:
-            print("Database connection failed.")
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+    else:
+        print("Database connection failed.")
+
 
 # process this after every request
 def after_request(response):
@@ -97,6 +110,8 @@ def after_request(response):
 @app.route("/")
 def hello():
     return "hello"
+    # print(app.url_map)
+    # return render_template("landing_page.html")
 
 @app.route("/getUserName", methods=["GET"])
 def getUsername():

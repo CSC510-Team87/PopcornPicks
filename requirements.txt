@@ -7,8 +7,10 @@ pytest==7.4.2
 pytest-cov==4.1.0
 pylint==3.0.1
 python-dotenv==1.0.0
-mysql==0.0.3
-mysqlclient==2.2.0
-mysql-connector-python==8.2.0
 black===23.7.0
 bcrypt===4.0.1
+nltk
+sklearn
+jwt
+mysql-connector-python
+flask-sqlalchemy
