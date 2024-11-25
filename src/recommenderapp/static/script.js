@@ -144,7 +144,7 @@ $(document).ready(function () {
 		//Possibility of other cases.
 		$.ajax({
 			type: "POST",
-			url: "/log",
+			url: "/login",
 			dataType: "json",
       		contentType: "application/json;charset=UTF-8",
 			traditional: "true",
@@ -286,7 +286,7 @@ $(document).ready(function () {
 			//Possibility of other cases.
 			$.ajax({
 				type: "POST",
-				url: "/",
+				url: "/signup",
 				dataType: "json",
 				contentType: "application/json;charset=UTF-8",
 				traditional: "true",
@@ -294,7 +294,7 @@ $(document).ready(function () {
 				data: JSON.stringify(data),
 				success: function (response) {
 					setTimeout(function () {
-						window.location.href = "/" // Replace with the actual URL of your search page
+						window.location.href = "/"
 					}, 2000)
 				},
 				error: function (error) {},
