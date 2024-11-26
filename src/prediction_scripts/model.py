@@ -51,7 +51,7 @@ class MovieRecommender:
 
             # Prepare the output list
             for _, row in top_recommendations.iterrows():
-                recommendations.append((row['title'], row['similarity_score']))
+                recommendations.append({'title': row['title'], 'similarity_score': row['similarity_score']})
 
         except IndexError:
             return f"Movie '{movie_title}' not found in database."

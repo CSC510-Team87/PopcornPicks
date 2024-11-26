@@ -19,6 +19,7 @@ from flask_cors import CORS
 import mysql.connector
 import pickle
 from dotenv import load_dotenv
+import logging
 # from utils import (
 #     beautify_feedback_data,
 #     send_email_to_user,
@@ -241,32 +242,38 @@ recommender.prepare_data('../../data/movies.csv')
 @app.route('/predict', methods=['POST'])
 def predict():
    
-    # Get the list of movies from the request
-    data = request.json
-    input_movies = data.get('movies', [])
-    
-    if not input_movies:
-        return jsonify({'error': 'No movies provided'}), 400
+    try:
+        # Get the list of movies from the request
+        data = request.json
+        input_movies = data.get('movies', [])
         
-    # Store for recommendations
-    recommendations = set()
-        
-       # Get recommendations for each input movie
-    for movie_title in input_movies:
-        try:
-            # Get recommendations for the current movie
-            recs = recommender.recommend(movie_title, 10)
-            for rec in recs:
-                if rec['title'] not in input_movies:  # Exclude input movies
+        if not input_movies:
+            return jsonify({'error': 'No movies provided'}), 400
+            
+        # Store for recommendations
+        recommendations = set()
+            
+        # Get recommendations for each input movie
+        for movie in input_movies:
+            try:
+                # Get recommendations for the current movie
+                recs = recommender.recommend(movie, 10)
+                for rec in recs:
                     recommendations.add(rec['title'])
-        except Exception as e:
-            # If movie is not found or other errors occur, skip to the next
-            continue
+            except IndexError:
+                # If movie is not found or other errors occur, skip to the next
+                continue
+         # Remove any input movies from recommendations
+        # recommendations = list(recommendations - set(input_movies))
 
-    # Limit the recommendations to 10 unique entries
-    top_recommendations = list(recommendations)[:10]
+        # Limit the recommendations to 10 unique entries
+        top_recommendations = list(recommendations)[:10]
+        
+        return jsonify(top_recommendations), 200
     
-    return jsonify(top_recommendations), 200
+    except Exception as e:
+        logging.error(f"Error in prediction: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == "__main__":
