@@ -241,33 +241,39 @@ recommender.prepare_data('../../data/movies.csv')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-   
     try:
-        # Get the list of movies from the request
         data = request.json
         input_movies = data.get('movies', [])
         
         if not input_movies:
             return jsonify({'error': 'No movies provided'}), 400
             
-        # Store for recommendations
         recommendations = set()
+        movie_details = []  # Store both title and ID
             
-        # Get recommendations for each input movie
         for movie in input_movies:
             try:
-                # Get recommendations for the current movie
                 recs = recommender.recommend(movie, 10)
                 for rec in recs:
-                    recommendations.add(rec['title'])
+                    if rec['title'] not in recommendations:
+                        # Get movie ID from database
+                        cursor = g.db.cursor()
+                        cursor.execute("SELECT idMovies FROM Movies WHERE name = %s", (rec['title'],))
+                        result = cursor.fetchone()
+                        cursor.close()
+                        
+                        if result:
+                            movie_id = result[0]
+                            recommendations.add(rec['title'])
+                            movie_details.append({
+                                'id': movie_id,
+                                'title': rec['title']
+                            })
             except IndexError:
-                # If movie is not found or other errors occur, skip to the next
                 continue
-         # Remove any input movies from recommendations
-        # recommendations = list(recommendations - set(input_movies))
-
-        # Limit the recommendations to 10 unique entries
-        top_recommendations = list(recommendations)[:10]
+         
+        # Limit to top 10
+        top_recommendations = movie_details[:10]
         
         return jsonify(top_recommendations), 200
     
@@ -286,7 +292,7 @@ def get_watchlist():
         token = auth_header.split(' ')[1]
         try:
             # Decode token to get user_id
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])  # Use SECRET_KEY instead of app.config
             user_id = payload['user_id']
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
@@ -411,22 +417,44 @@ def check_watchlist_status(movie_id):
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user_id = payload['user_id']
+            print(f"Checking watchlist for user {user_id}, movie {movie_id}")  # Debug log
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
 
         cursor = g.db.cursor()
+        
+        # First check if movie exists in database
+        movie_check_query = "SELECT idMovies FROM Movies WHERE idMovies = %s"
+        cursor.execute(movie_check_query, (movie_id,))
+        movie_exists = cursor.fetchone()
+        
+        if not movie_exists:
+            print(f"Movie {movie_id} not found in database")  # Debug log
+            cursor.close()
+            return jsonify({
+                "error": f"Movie not found with ID: {movie_id}",
+                "exists": False
+            }), 404
+
+        # Then check watchlist status
         check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
         cursor.execute(check_query, (user_id, movie_id))
         result = cursor.fetchone()
         cursor.close()
 
+        print(f"Watchlist check result for movie {movie_id}: {bool(result)}")  # Debug log
+        
         return jsonify({
-            "isInWatchlist": bool(result)
+            "isInWatchlist": bool(result),
+            "exists": True
         })
 
     except Exception as e:
         print(f"Error checking watchlist status: {str(e)}")
-        return jsonify({"error": "Failed to check watchlist status"}), 500
+        return jsonify({
+            "error": "Failed to check watchlist status",
+            "details": str(e)
+        }), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3001, debug=True)
