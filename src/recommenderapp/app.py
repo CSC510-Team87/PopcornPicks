@@ -283,6 +283,112 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route("/watchlist", methods=["GET"])
+def get_watchlist():
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            # Decode token to get user_id
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor(dictionary=True)
+        query = """
+            SELECT w.id, m.name as title, w.added_date, m.imdb_id
+            FROM Watchlist w
+            JOIN Movies m ON w.movie_id = m.idMovies
+            WHERE w.user_id = %s
+            ORDER BY w.added_date DESC
+        """
+        cursor.execute(query, (user_id,))
+        watchlist = cursor.fetchall()
+        cursor.close()
+
+        # Format the response
+        formatted_watchlist = [{
+            'id': str(item['id']),
+            'title': item['title'],
+            'addedDate': item['added_date'].isoformat() if item['added_date'] else None,
+            'imdbId': item['imdb_id']
+        } for item in watchlist]
+
+        return jsonify(formatted_watchlist)
+
+    except Exception as e:
+        print(f"Error fetching watchlist: {str(e)}")
+        return jsonify({"error": "Failed to fetch watchlist"}), 500
+
+@app.route("/watchlist/<int:movie_id>", methods=["POST"])
+def add_to_watchlist(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        # Check if movie is already in watchlist
+        check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(check_query, (user_id, movie_id))
+        if cursor.fetchone():
+            cursor.close()
+            return jsonify({"error": "Movie already in watchlist"}), 400
+
+        # Add to watchlist
+        insert_query = """
+            INSERT INTO Watchlist (user_id, movie_id, added_date)
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(insert_query, (user_id, movie_id, datetime.datetime.now()))
+        g.db.commit()
+        cursor.close()
+
+        return jsonify({"message": "Added to watchlist"}), 201
+
+    except Exception as e:
+        print(f"Error adding to watchlist: {str(e)}")
+        return jsonify({"error": "Failed to add to watchlist"}), 500
+
+@app.route("/watchlist/<int:watchlist_id>", methods=["DELETE"])
+def remove_from_watchlist(watchlist_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        delete_query = "DELETE FROM Watchlist WHERE id = %s AND user_id = %s"
+        cursor.execute(delete_query, (watchlist_id, user_id))
+        g.db.commit()
+        cursor.close()
+
+        return jsonify({"message": "Removed from watchlist"}), 200
+
+    except Exception as e:
+        print(f"Error removing from watchlist: {str(e)}")
+        return jsonify({"error": "Failed to remove from watchlist"}), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3001, debug=True)
