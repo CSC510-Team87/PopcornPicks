@@ -66,8 +66,6 @@ cors = CORS(app, resources={
 })
 user = {1: None}
 
-load_dotenv()
-
 DATABASE_CONFIG = {
     'host': 'localhost',
     'port': 27276,
@@ -75,6 +73,7 @@ DATABASE_CONFIG = {
     'password': '18970926554Nicaia??',
     'database': 'popcornpicksdb'
 }
+
 
 @app.before_request
 def before_request():
