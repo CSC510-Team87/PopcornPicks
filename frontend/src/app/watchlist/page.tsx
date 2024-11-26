@@ -10,7 +10,7 @@ import {
   Divider,
   Spinner
 } from "@nextui-org/react";
-import { Star, Trash2, ArrowLeft } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from '@/app/components/alert';
 
 interface WatchlistMovie {
@@ -23,51 +23,50 @@ interface WatchlistMovie {
 export default function WatchlistPage() {
   const [movies, setMovies] = useState<WatchlistMovie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [alertState, setAlertState] = useState({
+    show: false,
+    message: '',
+    type: 'default'
+  });
   const router = useRouter();
-
-  useEffect(() => {
-    fetchWatchlist();
-  }, []);
 
   const fetchWatchlist = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:3001/watchlist', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch watchlist');
-      }
-
+      const response = await fetch('http://127.0.0.1:3001/watchlist');
       const data = await response.json();
-      setMovies(data);
-    } catch (err) {
-      setError('Failed to load watchlist. Please try again later.');
-      console.error('Error fetching watchlist:', err);
-    } finally {
+      setMovies(Array.isArray(data) ? data : []);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching watchlist:', error);
+      setAlertState({
+        show: true,
+        message: 'Error loading watchlist. Please try again later.',
+        type: 'destructive'
+      });
+      setMovies([]);
       setIsLoading(false);
     }
   };
 
   const removeFromWatchlist = async (movieId: string) => {
     try {
-      const response = await fetch(`http://127.0.0.1:3001/watchlist/${movieId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      await fetch(`http://127.0.0.1:3001/watchlist/${movieId}`, {
+        method: 'DELETE'
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to remove movie from watchlist');
-      }
-
-      // Update local state to remove the movie
       setMovies(movies.filter(movie => movie.id !== movieId));
-    } catch (err) {
-      setError('Failed to remove movie. Please try again.');
-      console.error('Error removing movie:', err);
+    } catch (error) {
+      console.error('Error removing movie:', error);
+      setAlertState({
+        show: true,
+        message: 'Error removing movie. Please try again later.',
+        type: 'destructive'
+      });
     }
   };
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, []);
 
   if (isLoading) {
     return (
@@ -77,88 +76,97 @@ export default function WatchlistPage() {
     );
   }
 
+  const renderMovieList = () => {
+    const moviesList = Array.isArray(movies) ? movies : [];
+    
+    if (moviesList.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-default-500">
+            Your watchlist is empty. Start adding movies from recommendations!
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {moviesList.map((movie: WatchlistMovie) => (
+          <Card key={movie.id} className="w-full">
+            <CardBody className="flex justify-between items-center p-4">
+              <div>
+                <p className="font-medium">{movie.title}</p>
+                <p className="text-sm text-default-500">
+                  Added on {new Date(movie.addedDate).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {movie.imdbId && (
+                  <Button 
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    as="a"
+                    href={`https://www.imdb.com/title/${movie.imdbId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    IMDb
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  color="danger"
+                  variant="light"
+                  onClick={() => removeFromWatchlist(movie.id)}
+                  startContent={<Trash2 size={16} />}
+                >
+                  Remove
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
-      {/* Header Section */}
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-bold">
-          My Watchlist 🎬
-        </h2>
+        <h2 className="text-4xl font-bold">My Watchlist 🎬</h2>
         <p className="text-lg text-muted-foreground">
           Keep track of movies you want to watch later
         </p>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+      {alertState.show && (
+        <Alert 
+          variant={alertState.type === 'destructive' ? 'destructive' : 'default'}
+          className="mx-auto max-w-2xl"
+        >
+          <AlertDescription>
+            {alertState.message}
+          </AlertDescription>
         </Alert>
       )}
 
-      {/* Watchlist Content */}
       <Card>
         <CardHeader className="flex justify-between items-center">
           <div className="flex flex-col">
             <p className="text-lg font-bold">Your Movies</p>
             <p className="text-sm text-default-500">
-              {movies.length} {movies.length === 1 ? 'movie' : 'movies'} in your watchlist
+              {movies?.length || 0} {movies?.length === 1 ? 'movie' : 'movies'} in your watchlist
             </p>
           </div>
         </CardHeader>
         <Divider/>
         <CardBody>
-          {movies.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-default-500">
-                Your watchlist is empty. Start adding movies from recommendations!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {movies.map((movie) => (
-                <Card key={movie.id} className="w-full">
-                  <CardBody className="flex justify-between items-center p-4">
-                    <div>
-                      <p className="font-medium">{movie.title}</p>
-                      <p className="text-sm text-default-500">
-                        Added on {new Date(movie.addedDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {movie.imdbId && (
-                        <Button 
-                          size="sm"
-                          color="primary"
-                          variant="flat"
-                          as="a"
-                          href={`https://www.imdb.com/title/${movie.imdbId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          IMDb
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        color="danger"
-                        variant="light"
-                        onClick={() => removeFromWatchlist(movie.id)}
-                        startContent={<Trash2 size={16} />}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-          )}
+          {renderMovieList()}
         </CardBody>
       </Card>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-center gap-4 mt-8">
+      <div className="flex justify-center gap-4">
         <Button
           size="lg"
           onClick={() => router.push("/landing")}
