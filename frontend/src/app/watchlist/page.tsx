@@ -32,7 +32,13 @@ export default function WatchlistPage() {
 
   const fetchWatchlist = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:3001/watchlist');
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('http://127.0.0.1:3001/watchlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setMovies(Array.isArray(data) ? data : []);
       setIsLoading(false);
@@ -50,8 +56,13 @@ export default function WatchlistPage() {
 
   const removeFromWatchlist = async (movieId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      
       await fetch(`http://127.0.0.1:3001/watchlist/${movieId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       setMovies(movies.filter(movie => movie.id !== movieId));
     } catch (error) {
@@ -93,36 +104,41 @@ export default function WatchlistPage() {
       <div className="space-y-4">
         {moviesList.map((movie: WatchlistMovie) => (
           <Card key={movie.id} className="w-full">
-            <CardBody className="flex justify-between items-center p-4">
-              <div>
-                <p className="font-medium">{movie.title}</p>
-                <p className="text-sm text-default-500">
-                  Added on {new Date(movie.addedDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {movie.imdbId && (
-                  <Button 
+            <CardBody>
+              <div className="flex w-full items-center justify-between">
+                {/* Left side - Title and Date */}
+                <div className="flex flex-col">
+                  <p className="font-medium">{movie.title}</p>
+                  <p className="text-sm text-default-500">
+                    Added on {new Date(movie.addedDate).toLocaleDateString()}
+                  </p>
+                </div>
+
+                {/* Right side - Buttons */}
+                <div className="flex items-center space-x-2">
+                  {movie.imdbId && (
+                    <Button 
+                      size="sm"
+                      color="primary"
+                      variant="flat"
+                      as="a"
+                      href={`https://www.imdb.com/title/${movie.imdbId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      IMDb
+                    </Button>
+                  )}
+                  <Button
                     size="sm"
-                    color="primary"
-                    variant="flat"
-                    as="a"
-                    href={`https://www.imdb.com/title/${movie.imdbId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    color="danger"
+                    variant="light"
+                    onClick={() => removeFromWatchlist(movie.id)}
+                    startContent={<Trash2 size={16} />}
                   >
-                    IMDb
+                    Remove
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  color="danger"
-                  variant="light"
-                  onClick={() => removeFromWatchlist(movie.id)}
-                  startContent={<Trash2 size={16} />}
-                >
-                  Remove
-                </Button>
+                </div>
               </div>
             </CardBody>
           </Card>
