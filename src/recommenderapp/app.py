@@ -69,9 +69,9 @@ user = {1: None}
 
 DATABASE_CONFIG = {
     'host': 'localhost',
-    'port': 3306,
+    'port': 27276,
     'user': 'root',
-    'password': 'password',
+    'password': '18970926554Nicaia??',
     'database': 'popcornpicksdb'
 }
 
@@ -235,6 +235,7 @@ def login():
     except Exception as e:
         app.logger.error(f"Login failed: {str(e)}")
         return jsonify({"error": "Login failed, please check your credentials", "status": "fail"}), 401
+
 
 recommender = MovieRecommender()
 recommender.prepare_data('../../data/movies.csv')

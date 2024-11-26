@@ -7,11 +7,17 @@ import { Button, Input } from "@nextui-org/react";
 import { Alert, AlertDescription } from "../components/alert";
 import axios from "axios";
 
+// Interfance for the movie subject
+interface Movie {
+  name: string;
+  score: number;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [friendUsername, setFriendUsername] = useState("")
-  const [userMovies, setUserMovies] = useState([]);
+  const [userMovies, setUserMovies] = useState<Movie[]>([]);
   const [friendsList, setFriendsList] = useState([]);
   const [recentFriendMovies, setRecentFriendMovies] = useState<Record<string, any[]>>({});
   const [alertState, setAlertState] = useState({
@@ -90,11 +96,9 @@ return (
         <h2 className="text-2xl font-bold mb-4 text-black">Your Reviewed Movies</h2>
         <ul className="space-y-2">
           {userMovies.map((movie, index) => (
-            <li key={index} className="text-lg">"Movie Name" {
-              //movie.name
-            }: {
-                //movie.score
-              } 10/10 stars</li>
+            <li key={index} className="text-lg text-black">
+              {movie.name}: {Array.from({ length: 10 }, (_, i) => i < movie.score ? '★' : '☆').join('')}
+            </li>
           ))}
         </ul>
       </section>
