@@ -12,6 +12,7 @@ import {
 } from "@nextui-org/react";
 import { Alert, AlertDescription } from '@/app/components/alert';
 import { LoaderIcon } from "lucide-react";
+import WatchlistButton from "@/app/components/watchlist-button";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function SearchPage() {
   const [selectedMovies, setSelectedMovies] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [recentMovies, setRecentMovies] = useState<string[]>([]);
-  const [predictedMovies, setPredictedMovies] = useState<string[]>([]);
+  const [predictedMovies, setPredictedMovies] = useState<Array<{id: string, title: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [alertState, setAlertState] = useState({
     show: false,
@@ -244,10 +245,17 @@ export default function SearchPage() {
               <Divider/>
               <CardBody>
                 <div className="space-y-2">
-                  {predictedMovies.map((movie, index) => (
-                    <Card key={index} className="w-full">
-                      <CardBody className="p-2">
-                        {movie}
+                  {predictedMovies.map((movie) => (
+                    <Card key={movie.id} className="w-full">
+                      <CardBody className="p-2 flex flex-row justify-between items-center gap-4">
+                        <span className="flex-1 truncate">{movie.title}</span>
+                        <div className="flex-shrink-0">
+                          <WatchlistButton
+                            key={`watchlist-${movie.id}`}
+                            movieId={movie.id}
+                            movieTitle={movie.title}
+                          />
+                        </div>
                       </CardBody>
                     </Card>
                   ))}

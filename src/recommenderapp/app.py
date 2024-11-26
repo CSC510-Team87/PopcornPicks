@@ -59,18 +59,19 @@ app.secret_key = "secret key"
 
 cors = CORS(app, resources={
     r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 user = {1: None}
 
 DATABASE_CONFIG = {
     'host': 'localhost',
-    'port': 27276,
+    'port': 3306,
     'user': 'root',
-    'password': '18970926554Nicaia??',
+    'password': 'password',
     'database': 'popcornpicksdb'
 }
 
@@ -240,33 +241,50 @@ recommender.prepare_data('../../data/movies.csv')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-   
     try:
-        # Get the list of movies from the request
         data = request.json
         input_movies = data.get('movies', [])
         
         if not input_movies:
             return jsonify({'error': 'No movies provided'}), 400
             
-        # Store for recommendations
         recommendations = set()
+        movie_details = []  # Store both title and ID
             
-        # Get recommendations for each input movie
         for movie in input_movies:
             try:
-                # Get recommendations for the current movie
                 recs = recommender.recommend(movie, 10)
                 for rec in recs:
-                    recommendations.add(rec['title'])
+                    # Check if this movie title hasn't been processed yet
+                    if rec['title'] not in recommendations:
+                        # Create a new database cursor
+                        cursor = g.db.cursor()
+                        
+                        # Query the Movies table to find if this movie exists
+                        # and get its unique database ID (idMovies)
+                        cursor.execute("SELECT idMovies FROM Movies WHERE name = %s", (rec['title'],))
+                        result = cursor.fetchone()
+                        cursor.close()
+                        
+                        # If the movie was found in the database
+                        if result:
+                            # Get the movie's ID from the result
+                            movie_id = result[0]
+                            
+                            # Add the title to our set of processed recommendations
+                            # to avoid duplicates
+                            recommendations.add(rec['title'])
+                            
+                            # Add both the ID and title to our final results
+                            movie_details.append({
+                                'id': movie_id,
+                                'title': rec['title']
+                            })
             except IndexError:
-                # If movie is not found or other errors occur, skip to the next
                 continue
-         # Remove any input movies from recommendations
-        # recommendations = list(recommendations - set(input_movies))
-
-        # Limit the recommendations to 10 unique entries
-        top_recommendations = list(recommendations)[:10]
+         
+        # Limit to top 10
+        top_recommendations = movie_details[:10]
         
         return jsonify(top_recommendations), 200
     
@@ -274,6 +292,215 @@ def predict():
         logging.error(f"Error in prediction: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route("/watchlist", methods=["GET"])
+def get_watchlist():
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            # Decode token to get user_id
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])  # Use SECRET_KEY instead of app.config
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor(dictionary=True)
+        query = """
+            SELECT w.id, m.name as title, w.added_date, m.imdb_id
+            FROM Watchlist w
+            JOIN Movies m ON w.movie_id = m.idMovies
+            WHERE w.user_id = %s
+            ORDER BY w.added_date DESC
+        """
+        cursor.execute(query, (user_id,))
+        watchlist = cursor.fetchall()
+        cursor.close()
+
+        # Format the response
+        formatted_watchlist = [{
+            'id': str(item['id']),
+            'title': item['title'],
+            'addedDate': item['added_date'].isoformat() if item['added_date'] else None,
+            'imdbId': item['imdb_id']
+        } for item in watchlist]
+
+        return jsonify(formatted_watchlist)
+
+    except Exception as e:
+        print(f"Error fetching watchlist: {str(e)}")
+        return jsonify({"error": "Failed to fetch watchlist"}), 500
+
+@app.route("/watchlist/<int:movie_id>", methods=["POST"])
+def add_to_watchlist(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            print(f"Processing request for movie_id: {movie_id}")  # Debug log
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+            print(f"User ID from token: {user_id}")  # Debug log
+            
+        except jwt.InvalidTokenError as e:
+            print(f"Token validation failed: {str(e)}")
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        
+        # First verify the movie exists
+        print(f"Checking if movie exists: {movie_id}")  # Debug log
+        movie_check_query = "SELECT idMovies FROM Movies WHERE idMovies = %s"
+        cursor.execute(movie_check_query, (movie_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            return jsonify({"error": f"Movie not found with ID: {movie_id}"}), 404
+
+        # Check if movie is already in watchlist
+        check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(check_query, (user_id, movie_id))
+        if cursor.fetchone():
+            cursor.close()
+            return jsonify({"error": "Movie already in watchlist"}), 400
+
+        # Add to watchlist
+        try:
+            insert_query = """
+                INSERT INTO Watchlist (user_id, movie_id, added_date)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(insert_query, (user_id, movie_id, datetime.datetime.now()))
+            g.db.commit()
+            print(f"Successfully added movie {movie_id} to watchlist for user {user_id}")  # Debug log
+            cursor.close()
+            return jsonify({"message": "Added to watchlist"}), 201
+        except mysql.connector.Error as e:
+            print(f"Database error: {str(e)}")  # Debug log
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    except Exception as e:
+        print(f"Error adding to watchlist: {str(e)}")
+        return jsonify({"error": f"Failed to add to watchlist: {str(e)}"}), 500
+
+@app.route("/watchlist/<int:watchlist_id>", methods=["DELETE"])
+def remove_from_watchlist(watchlist_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+            print(f"Removing watchlist entry {watchlist_id} for user {user_id}")  # Debug log
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        delete_query = "DELETE FROM Watchlist WHERE id = %s AND user_id = %s"
+        cursor.execute(delete_query, (watchlist_id, user_id))
+        g.db.commit()
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            return jsonify({"error": "Watchlist entry not found"}), 404
+            
+        cursor.close()
+        return jsonify({"message": "Removed from watchlist"}), 200
+
+    except Exception as e:
+        print(f"Error removing from watchlist: {str(e)}")
+        return jsonify({"error": "Failed to remove from watchlist"}), 500
+
+@app.route("/watchlist/check/<int:movie_id>", methods=["GET"])
+def check_watchlist_status(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+            print(f"Checking watchlist for user {user_id}, movie {movie_id}")  # Debug log
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        
+        # First check if movie exists in database
+        movie_check_query = "SELECT idMovies FROM Movies WHERE idMovies = %s"
+        cursor.execute(movie_check_query, (movie_id,))
+        movie_exists = cursor.fetchone()
+        
+        if not movie_exists:
+            print(f"Movie {movie_id} not found in database")  # Debug log
+            cursor.close()
+            return jsonify({
+                "error": f"Movie not found with ID: {movie_id}",
+                "exists": False
+            }), 404
+
+        # Then check watchlist status
+        check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(check_query, (user_id, movie_id))
+        result = cursor.fetchone()
+        cursor.close()
+
+        print(f"Watchlist check result for movie {movie_id}: {bool(result)}")  # Debug log
+        
+        return jsonify({
+            "isInWatchlist": bool(result),
+            "exists": True
+        })
+
+    except Exception as e:
+        print(f"Error checking watchlist status: {str(e)}")
+        return jsonify({
+            "error": "Failed to check watchlist status",
+            "details": str(e)
+        }), 500
+
+@app.route("/watchlist/movie/<int:movie_id>", methods=["DELETE"])
+def remove_from_watchlist_by_movie(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        delete_query = "DELETE FROM Watchlist WHERE movie_id = %s AND user_id = %s"
+        cursor.execute(delete_query, (movie_id, user_id))
+        g.db.commit()
+        cursor.close()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Movie not found in watchlist"}), 404
+
+        return jsonify({"message": "Removed from watchlist"}), 200
+
+    except Exception as e:
+        print(f"Error removing from watchlist: {str(e)}")
+        return jsonify({"error": "Failed to remove from watchlist"}), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3001, debug=True)
