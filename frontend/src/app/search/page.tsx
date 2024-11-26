@@ -12,6 +12,7 @@ import {
 } from "@nextui-org/react";
 import { Alert, AlertDescription } from '@/app/components/alert';
 import { LoaderIcon } from "lucide-react";
+import WatchlistButton from "@/app/components/watchlist-button";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -246,8 +247,12 @@ export default function SearchPage() {
                 <div className="space-y-2">
                   {predictedMovies.map((movie, index) => (
                     <Card key={index} className="w-full">
-                      <CardBody className="p-2">
+                      <CardBody className="p-2 flex justify-between">
                         {movie}
+                        <WatchlistButton 
+                          movieId={index.toString()}
+                          movieTitle={movie}
+                        />
                       </CardBody>
                     </Card>
                   ))}
