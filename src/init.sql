@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS Movies (
   overview TEXT,                            -- Maps to 'overview', as descriptions can be long
   poster_path VARCHAR(2083),                -- Maps to 'poster_path', accommodates long URLs
   runtime INT,                              -- Maps to 'runtime', stored as an integer
+  streaming_platforms TEXT,                 -- Maps to 'streaming_platforms'
   PRIMARY KEY (idMovies),
   UNIQUE INDEX imdb_id_UNIQUE (imdb_id ASC)
 );

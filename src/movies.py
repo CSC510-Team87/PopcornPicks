@@ -34,8 +34,8 @@ def import_csv_to_mysql():
             for row in csv_reader:
                 # Insert the row into the Movies table
                 insert_query = """
-                    INSERT INTO Movies (name, genres, imdb_id, overview, poster_path, runtime)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    INSERT INTO Movies (name, genres, imdb_id, overview, poster_path, runtime, streaming_platforms)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
                 try:
                     cursor.execute(insert_query, (
@@ -44,13 +44,11 @@ def import_csv_to_mysql():
                         row['imdb_id'],       # Maps to 'imdb_id'
                         row['overview'],      # Maps to 'overview'
                         row['poster_path'],   # Maps to 'poster_path'
-                        int(row['runtime']) if row['runtime'] else None  # Maps to 'runtime'
+                        int(row['runtime']) if row['runtime'] else None,  # Maps to 'runtime'
+                        row['streaming_platforms']
                     ))
                 except mysql.connector.Error as error:
-                    if "1062" in str(error):
-                        print(f"Skipping duplicate: {row['title']}")
-                    else:
-                        raise error
+                    print(f"Skipping: {row['title']}")
 
         # Commit the transaction
         connection.commit()
