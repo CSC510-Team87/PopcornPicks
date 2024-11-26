@@ -388,7 +388,7 @@ def remove_from_watchlist(watchlist_id):
         
         token = auth_header.split(' ')[1]
         try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user_id = payload['user_id']
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
@@ -398,6 +398,9 @@ def remove_from_watchlist(watchlist_id):
         cursor.execute(delete_query, (watchlist_id, user_id))
         g.db.commit()
         cursor.close()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Movie not found in watchlist"}), 404
 
         return jsonify({"message": "Removed from watchlist"}), 200
 
