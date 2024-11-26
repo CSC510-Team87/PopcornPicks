@@ -13,6 +13,7 @@ import sys
 import os
 import jwt
 import datetime
+import pandas as pd
 from flask import Flask, jsonify, render_template, request, g
 from flask_cors import CORS
 import mysql.connector
@@ -41,13 +42,16 @@ from utils import create_account
 from utils import login_to_account
 from search import Search
 from item_based import recommend_for_new_user
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from prediction_scripts.model import MovieRecommender
+
 search_instance = Search()
 
 
 sys.path.append("../../")
-
 sys.path.remove("../../")
-
 
 app = Flask(__name__)
 app.secret_key = "secret key"
@@ -231,59 +235,38 @@ def login():
         app.logger.error(f"Login failed: {str(e)}")
         return jsonify({"error": "Login failed, please check your credentials", "status": "fail"}), 401
 
-
-# Load the saved models
-def load_models():
-    try:
-        movies_df = pickle.load(open('../prediction_scripts/artifacts/movie_list.pkl', 'rb'))
-        similarity_matrix = pickle.load(open('../prediction_scripts/artifacts/similarity.pkl', 'rb'))
-        return movies_df, similarity_matrix
-    except Exception as e:
-        print(f"Error loading models: {str(e)}")
-        return None, None
-
-movies_df, similarity_matrix = load_models()
+recommender = MovieRecommender()
+recommender.prepare_data('../../data/movies.csv')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        # Get the list of movies from the request
-        data = request.json
-        input_movies = data.get('movies', [])
+   
+    # Get the list of movies from the request
+    data = request.json
+    input_movies = data.get('movies', [])
+    
+    if not input_movies:
+        return jsonify({'error': 'No movies provided'}), 400
         
-        if not input_movies:
-            return jsonify({'error': 'No movies provided'}), 400
-            
-        # Store for recommendations
-        recommendations = set()
+    # Store for recommendations
+    recommendations = set()
         
-        # Get recommendations for each input movie
-        for movie in input_movies:
-            try:
-                # Find the movie index
-                movie_index = movies_df[movies_df['title'] == movie].index[0]
-                
-                # Get similarity scores
-                distances = sorted(
-                    list(enumerate(similarity_matrix[movie_index])),
-                    reverse=True,
-                    key=lambda x: x[1]
-                )
-                
-                # Add top 3 recommendations for each input movie
-                for i in distances[1:4]:  # Skip first as it's the movie itself
-                    recommendations.add(movies_df.iloc[i[0]].title)
-            except IndexError:
-                continue
-        
-        # Remove any input movies from recommendations
-        recommendations = list(recommendations - set(input_movies))
-        
-        # Return top 10 recommendations
-        return jsonify(recommendations[:10])
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+       # Get recommendations for each input movie
+    for movie_title in input_movies:
+        try:
+            # Get recommendations for the current movie
+            recs = recommender.recommend(movie_title, 10)
+            for rec in recs:
+                if rec['title'] not in input_movies:  # Exclude input movies
+                    recommendations.add(rec['title'])
+        except Exception as e:
+            # If movie is not found or other errors occur, skip to the next
+            continue
+
+    # Limit the recommendations to 10 unique entries
+    top_recommendations = list(recommendations)[:10]
+    
+    return jsonify(top_recommendations), 200
 
 
 if __name__ == "__main__":

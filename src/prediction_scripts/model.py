@@ -10,7 +10,6 @@ class MovieRecommender:
     def __init__(self):
         self.ps = PorterStemmer()
         self.cv = CountVectorizer(max_features=5000, stop_words='english')
-        self.movies = None  # Dataframe to hold movie data
         
     def prepare_data(self, movies_path, ratings_path=None):
         """
@@ -25,15 +24,6 @@ class MovieRecommender:
         self.movies = self.movies.drop_duplicates()
 
         self.movies['genres'] = self.movies['genres'].apply(lambda x: set(x.split('|')))
-        self.processed_df = self.movies  # Assuming you want to save this DataFrame
-        
-    def _remove_space(self, L):
-        """Remove spaces from list elements"""
-        return [i.replace(" ", "") for i in L]
-    
-    def _stem_text(self, text):
-        """Apply Porter Stemming to text"""
-        return " ".join([self.ps.stem(i) for i in text.split()])
     
     
     def recommend(self, movie_title, n_recommendations=5):
