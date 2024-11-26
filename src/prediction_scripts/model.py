@@ -23,23 +23,19 @@ class MovieRecommender:
         self.movies = pd.read_csv(movies_path)
         self.movies = self.movies.drop_duplicates()
         
-        # Process genres
+        # Process genres by removing spaces and converting them into a single string
         self.movies['genres'] = self.movies['genres'].apply(lambda x: x.split('|'))
         self.movies['genres'] = self.movies['genres'].apply(self._remove_space)
-        
-        # Process overview
-        self.movies['overview'] = self.movies['overview'].apply(lambda x: x.split())
-        
-        # Create tags
-        self.movies = self.movies[['movieId', 'title', 'genres', 'overview', 'runtime']]
-        self.movies['tags'] = self.movies['overview'] + self.movies['genres']
-        
+        self.movies['genres'] = self.movies['genres'].apply(lambda x: " ".join(x))
+
+        # Combine title and genres for tags
+        self.movies['tags'] = self.movies['title'] + " " + self.movies['genres']
+        self.movies['tags'] = self.movies['tags'].apply(lambda x: x.lower())
+        self.movies['tags'] = self.movies['tags'].apply(self._stem_text)
+
         # Create new dataframe with processed tags
         self.processed_df = self.movies[['movieId', 'title', 'tags']]
-        self.processed_df['tags'] = self.processed_df['tags'].apply(lambda x: " ".join(x))
-        self.processed_df['tags'] = self.processed_df['tags'].apply(lambda x: x.lower())
-        self.processed_df['tags'] = self.processed_df['tags'].apply(self._stem_text)
-        
+
         # Create similarity matrix
         self._create_similarity_matrix()
         
@@ -111,7 +107,7 @@ if __name__ == "__main__":
     recommender.prepare_data('../../data/movies.csv')
     
     # Get recommendations
-    recommendations = recommender.recommend('Spider-Man 2 (2004)')
+    recommendations = recommender.recommend('The Avengers (2012)')
     for rec in recommendations:
         print(rec)
     
