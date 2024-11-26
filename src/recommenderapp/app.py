@@ -378,8 +378,8 @@ def add_to_watchlist(movie_id):
         print(f"Error adding to watchlist: {str(e)}")
         return jsonify({"error": f"Failed to add to watchlist: {str(e)}"}), 500
 
-@app.route("/watchlist/<int:watchlist_id>", methods=["DELETE"])
-def remove_from_watchlist(watchlist_id):
+@app.route("/watchlist/movie/<int:movie_id>", methods=["DELETE"])
+def remove_movie_from_watchlist(movie_id):
     try:
         # Get token from header
         auth_header = request.headers.get('Authorization')
@@ -390,23 +390,46 @@ def remove_from_watchlist(watchlist_id):
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user_id = payload['user_id']
+            print(f"Removing movie {movie_id} for user {user_id}")  # Debug log
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
 
         cursor = g.db.cursor()
-        delete_query = "DELETE FROM Watchlist WHERE id = %s AND user_id = %s"
-        cursor.execute(delete_query, (watchlist_id, user_id))
+        
+        # Delete directly using movie_id and user_id
+        delete_query = "DELETE FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(delete_query, (user_id, movie_id))
         g.db.commit()
+        
+        affected_rows = cursor.rowcount
         cursor.close()
+        
+        if affected_rows == 0:
+            return jsonify({
+                "error": "Movie not found in watchlist",
+                "details": {
+                    "user_id": user_id,
+                    "movie_id": movie_id
+                }
+            }), 404
 
-        if cursor.rowcount == 0:
-            return jsonify({"error": "Movie not found in watchlist"}), 404
-
-        return jsonify({"message": "Removed from watchlist"}), 200
+        return jsonify({
+            "message": "Movie removed from watchlist",
+            "details": {
+                "user_id": user_id,
+                "movie_id": movie_id,
+                "rows_affected": affected_rows
+            }
+        })
 
     except Exception as e:
-        print(f"Error removing from watchlist: {str(e)}")
-        return jsonify({"error": "Failed to remove from watchlist"}), 500
+        print(f"Error removing movie from watchlist: {str(e)}")  # Debug log
+        return jsonify({
+            "error": str(e),
+            "details": {
+                "movie_id": movie_id
+            }
+        }), 500
 
 @app.route("/watchlist/check/<int:movie_id>", methods=["GET"])
 def check_watchlist_status(movie_id):

@@ -70,7 +70,7 @@ export default function WatchlistButton({ movieId, movieTitle }: WatchlistButton
     }
   }, [movieId]);
 
-  const addToWatchlist = async () => {
+  const toggleWatchlist = async () => {
     if (!movieExists) return;
     
     setIsLoading(true);
@@ -85,47 +85,55 @@ export default function WatchlistButton({ movieId, movieTitle }: WatchlistButton
         throw new Error('Invalid movie ID');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001'}/watchlist/${numericMovieId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          movieTitle,
-          movieId: numericMovieId
-        })
-      });
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001';
 
-      if (response.status === 404) {
-        setMovieExists(false);
-        throw new Error('Movie not found in database');
-      }
+      console.log('Current state:', { isAdded, movieId: numericMovieId }); // Debug log
 
-      const responseText = await response.text();
-      
-      if (!response.ok) {
-        let errorMessage;
-        try {
-          const errorData = JSON.parse(responseText);
-          errorMessage = errorData.error || `Failed to add to watchlist: ${response.status}`;
-        } catch {
-          errorMessage = `Failed to add to watchlist: ${response.status}`;
+      if (isAdded) {
+        // Remove from watchlist using movie ID directly
+        const response = await fetch(`${baseUrl}/watchlist/movie/${numericMovieId}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          }
+        });
+
+        const responseData = await response.json();
+        console.log('Remove response:', responseData); // Debug log
+
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Failed to remove from watchlist');
         }
-        throw new Error(errorMessage);
-      }
 
-      setIsAdded(true);
-      setMovieExists(true);
+        setIsAdded(false);
+      } else {
+        // Add to watchlist
+        const response = await fetch(`${baseUrl}/watchlist/${numericMovieId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          }
+        });
+
+        const responseData = await response.json();
+        console.log('Add response:', responseData); // Debug log
+
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Failed to add to watchlist');
+        }
+
+        setIsAdded(true);
+      }
     } catch (error) {
-      console.error("Failed to add to watchlist:", {
-        error: error instanceof Error ? error.message : String(error),
+      const errorDetails = {
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
         movieId,
-        movieTitle,
+        isAdded,
         timestamp: new Date().toISOString()
-      });
-      setIsAdded(false);
-      alert(error instanceof Error ? error.message : 'Failed to add to watchlist');
+      };
+      console.error("Watchlist operation failed:", errorDetails);
+      alert(errorDetails.message);
     } finally {
       setIsLoading(false);
     }
@@ -148,12 +156,11 @@ export default function WatchlistButton({ movieId, movieTitle }: WatchlistButton
     <Button
       size="sm"
       color={isAdded ? "success" : "primary"}
-      onClick={addToWatchlist}
+      onClick={toggleWatchlist}
       isLoading={isLoading}
       startContent={isAdded ? <Check size={16} /> : <Plus size={16} />}
-      isDisabled={isAdded}
     >
-      {isAdded ? "In Watchlist" : "Add to Watchlist"}
+      {isAdded ? "Remove from Watchlist" : "Add to Watchlist"}
     </Button>
   );
 }
