@@ -1,7 +1,6 @@
 import { Button } from "@nextui-org/react";
 import { Plus, Check } from "lucide-react";
 import { useState } from "react";
-import axios from "axios";
 
 interface WatchlistButtonProps {
   movieId: string;
@@ -15,10 +14,21 @@ export default function WatchlistButton({ movieId, movieTitle }: WatchlistButton
   const addToWatchlist = async () => {
     setIsLoading(true);
     try {
-      await axios.post("http://127.0.0.1:3001/watchlist", {
-        movieId,
-        movieTitle
+      const response = await fetch("http://127.0.0.1:3001/watchlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          movieId,
+          movieTitle
+        })
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to watchlist');
+      }
+
       setIsAdded(true);
     } catch (error) {
       console.error("Error adding to watchlist:", error);
