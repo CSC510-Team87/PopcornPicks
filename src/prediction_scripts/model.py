@@ -22,22 +22,8 @@ class MovieRecommender:
         # Load and preprocess movies data
         self.movies = pd.read_csv(movies_path)
         self.movies = self.movies.drop_duplicates()
-        
-        # Process genres by removing spaces and converting them into a single string
-        self.movies['genres'] = self.movies['genres'].apply(lambda x: x.split('|'))
-        self.movies['genres'] = self.movies['genres'].apply(self._remove_space)
-        self.movies['genres'] = self.movies['genres'].apply(lambda x: " ".join(x))
 
-        # Combine title and genres for tags
-        self.movies['tags'] = self.movies['title'] + " " + self.movies['genres']
-        self.movies['tags'] = self.movies['tags'].apply(lambda x: x.lower())
-        self.movies['tags'] = self.movies['tags'].apply(self._stem_text)
-
-        # Create new dataframe with processed tags
-        self.processed_df = self.movies[['movieId', 'title', 'tags']]
-
-        # Create similarity matrix
-        self._create_similarity_matrix()
+        self.movies['genres'] = self.movies['genres'].apply(lambda x: set(x.split('|')))
         
     def _remove_space(self, L):
         """Remove spaces from list elements"""
@@ -47,10 +33,6 @@ class MovieRecommender:
         """Apply Porter Stemming to text"""
         return " ".join([self.ps.stem(i) for i in text.split()])
     
-    def _create_similarity_matrix(self):
-        """Create cosine similarity matrix from processed tags"""
-        vectors = self.cv.fit_transform(self.processed_df['tags']).toarray()
-        self.similarity_matrix = cosine_similarity(vectors)
     
     def recommend(self, movie_title, n_recommendations=5):
         """
@@ -61,31 +43,29 @@ class MovieRecommender:
         n_recommendations (int): Number of recommendations to return
         
         Returns:
-        list: List of recommended movie titles
+        list: List of recommended movie titles with similarity score (number of shared genres)
         """
+        recommendations = []
         try:
-            # Find movie index
-            movie_index = self.processed_df[self.processed_df['title'] == movie_title].index[0]
+            # Find the genres of the movie
+            target_genres = self.movies[self.movies['title'] == movie_title]['genres'].iloc[0]
+
+            # Compute the number of shared genres with other movies and sort by this number
+            self.movies['similarity_score'] = self.movies['genres'].apply(lambda x: len(x.intersection(target_genres)))
             
-            # Get similarity scores and sort
-            distances = sorted(
-                list(enumerate(self.similarity_matrix[movie_index])),
-                reverse=True,
-                key=lambda x: x[1]
-            )
-            
-            # Get recommended movies
-            recommendations = []
-            for i in distances[1:n_recommendations+1]:
-                recommendations.append({
-                    'title': self.processed_df.iloc[i[0]].title,
-                    'similarity_score': round(i[1] * 100, 2)
-                })
-            
-            return recommendations
-            
+            # Get top recommendations based on similarity score, excluding the target movie
+            sorted_movies = self.movies[self.movies['title'] != movie_title].sort_values(by='similarity_score', ascending=False)
+            top_recommendations = sorted_movies.head(n_recommendations)
+
+            # Prepare the output list
+            for _, row in top_recommendations.iterrows():
+                recommendations.append((row['title'], row['similarity_score']))
+
         except IndexError:
             return f"Movie '{movie_title}' not found in database."
+
+        return recommendations
+    
     
     def save_model(self, save_dir='artifacts'):
         """Save processed data and similarity matrix"""
@@ -112,10 +92,10 @@ if __name__ == "__main__":
         print(rec)
     
     # Save model
-    # recommender.save_model()
+    recommender.save_model()
     
     # Load pre-trained model
-    loaded_recommender = MovieRecommender.load_model(
-        'artifacts/movie_list.pkl',
-        'artifacts/similarity.pkl'
-    )
+    # loaded_recommender = MovieRecommender.load_model(
+    #     'artifacts/movie_list.pkl',
+    #     'artifacts/similarity.pkl'
+    # )
