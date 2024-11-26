@@ -61,36 +61,39 @@ cors = CORS(app, resources={
 })
 user = {1: None}
 
-load_dotenv()
+DATABASE_CONFIG = {
+    'host': 'localhost',
+    'port': 27276,
+    'user': 'root',
+    'password': '18970926554Nicaia??',
+    'database': 'popcornpicksdb'
+}
 
-# process this before each request
 @app.before_request
 def before_request():
     """
-    Opens the db connection
+    Opens the db connection.
     """
     load_dotenv()
-    try:
-        g.db = mysql.connector.connect(
-            user="avnadmin",
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            database="popcornpicks",
-            port = 27276
-        )
-        if g.db.is_connected():
+    if 'db' not in g:
+        try:
+            g.db = mysql.connector.connect(
+                host=DATABASE_CONFIG['host'],
+                port=DATABASE_CONFIG['port'],
+                user=DATABASE_CONFIG['user'],
+                password=DATABASE_CONFIG['password'],
+                database=DATABASE_CONFIG['database']
+            )
             print("Database connected successfully.")
-        else:
-            print("Database connection failed.")
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+    else:
+        print("Database connection failed.")
 
-# process this after every request
+@app.after_request
 def after_request(response):
-    """
-    Closes the db connecttion
-    """
-    g.db.close()
+    if hasattr(g, 'db') and g.db is not None:
+        g.db.close()
     return response
 
 # test route
