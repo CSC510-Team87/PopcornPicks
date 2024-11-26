@@ -10,6 +10,7 @@ class MovieRecommender:
     def __init__(self):
         self.ps = PorterStemmer()
         self.cv = CountVectorizer(max_features=5000, stop_words='english')
+        self.movies = None  # Dataframe to hold movie data
         
     def prepare_data(self, movies_path, ratings_path=None):
         """
@@ -24,6 +25,7 @@ class MovieRecommender:
         self.movies = self.movies.drop_duplicates()
 
         self.movies['genres'] = self.movies['genres'].apply(lambda x: set(x.split('|')))
+        self.processed_df = self.movies  # Assuming you want to save this DataFrame
         
     def _remove_space(self, L):
         """Remove spaces from list elements"""
@@ -66,19 +68,6 @@ class MovieRecommender:
 
         return recommendations
     
-    
-    def save_model(self, save_dir='artifacts'):
-        """Save processed data and similarity matrix"""
-        pickle.dump(self.processed_df, open(f'{save_dir}/movie_list.pkl', 'wb'))
-        pickle.dump(self.similarity_matrix, open(f'{save_dir}/similarity.pkl', 'wb'))
-        
-    @classmethod
-    def load_model(cls, movie_list_path, similarity_matrix_path):
-        """Load a pre-trained model"""
-        recommender = cls()
-        recommender.processed_df = pickle.load(open(movie_list_path, 'rb'))
-        recommender.similarity_matrix = pickle.load(open(similarity_matrix_path, 'rb'))
-        return recommender
 
 # Example usage:
 if __name__ == "__main__":
@@ -90,12 +79,3 @@ if __name__ == "__main__":
     recommendations = recommender.recommend('The Avengers (2012)')
     for rec in recommendations:
         print(rec)
-    
-    # Save model
-    recommender.save_model()
-    
-    # Load pre-trained model
-    # loaded_recommender = MovieRecommender.load_model(
-    #     'artifacts/movie_list.pkl',
-    #     'artifacts/similarity.pkl'
-    # )
