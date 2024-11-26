@@ -22,8 +22,13 @@ CREATE TABLE IF NOT EXISTS Users (
 -- Create the Movies table
 CREATE TABLE IF NOT EXISTS Movies (
   idMovies INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(128) NOT NULL,
-  imdb_id VARCHAR(45) NOT NULL,
+  name VARCHAR(128) NOT NULL,               -- Maps to 'title'
+  imdb_id VARCHAR(45) NOT NULL,             -- Maps to 'imdb_id'
+  genres VARCHAR(255),                      -- Maps to 'genres', assuming a pipe-separated string
+  overview TEXT,                            -- Maps to 'overview', as descriptions can be long
+  poster_path VARCHAR(2083),                -- Maps to 'poster_path', accommodates long URLs
+  runtime INT,                              -- Maps to 'runtime', stored as an integer
+  streaming_platforms TEXT,                 -- Maps to 'streaming_platforms'
   PRIMARY KEY (idMovies),
   UNIQUE INDEX imdb_id_UNIQUE (imdb_id ASC)
 );
