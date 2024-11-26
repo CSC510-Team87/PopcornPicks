@@ -55,6 +55,15 @@ export default function ProfilePage() {
   };
 
   const addFriend = (username: string) => {
+  // Prevent adding oneself as a friend
+  if (username === userName) {
+    setAlertState({
+      show: true,
+      message: "You cannot add yourself as a friend.",
+      type: 'default' 
+    });
+    return; // Stop further execution
+  }
     axios
       .post("http://127.0.0.1:3001/friend", { user: username })  // Correct JSON structure
       .then((response) => {
@@ -143,6 +152,7 @@ return (
         <Button
           onClick={() => addFriend(friendUsername)} // Pass friendUsername here
           color="primary"
+          disabled={!friendUsername}  // Disable if input is empty
         >
           Add Friend
         </Button>
