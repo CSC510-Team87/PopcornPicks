@@ -77,6 +77,14 @@ export default function LandingPage() {
               >
                 Profile
               </Button>
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => router.push("/watchlist")}
+                color="primary"
+              >
+                See your Watchlist!
+              </Button>
             </div>
           </div>
         </main>
