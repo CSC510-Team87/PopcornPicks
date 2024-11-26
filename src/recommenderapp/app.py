@@ -327,12 +327,25 @@ def add_to_watchlist(movie_id):
         
         token = auth_header.split(' ')[1]
         try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            print(f"Processing request for movie_id: {movie_id}")  # Debug log
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user_id = payload['user_id']
-        except jwt.InvalidTokenError:
+            print(f"User ID from token: {user_id}")  # Debug log
+            
+        except jwt.InvalidTokenError as e:
+            print(f"Token validation failed: {str(e)}")
             return jsonify({"error": "Invalid token"}), 401
 
         cursor = g.db.cursor()
+        
+        # First verify the movie exists
+        print(f"Checking if movie exists: {movie_id}")  # Debug log
+        movie_check_query = "SELECT idMovies FROM Movies WHERE idMovies = %s"
+        cursor.execute(movie_check_query, (movie_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            return jsonify({"error": f"Movie not found with ID: {movie_id}"}), 404
+
         # Check if movie is already in watchlist
         check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
         cursor.execute(check_query, (user_id, movie_id))
@@ -341,19 +354,23 @@ def add_to_watchlist(movie_id):
             return jsonify({"error": "Movie already in watchlist"}), 400
 
         # Add to watchlist
-        insert_query = """
-            INSERT INTO Watchlist (user_id, movie_id, added_date)
-            VALUES (%s, %s, %s)
-        """
-        cursor.execute(insert_query, (user_id, movie_id, datetime.datetime.now()))
-        g.db.commit()
-        cursor.close()
-
-        return jsonify({"message": "Added to watchlist"}), 201
+        try:
+            insert_query = """
+                INSERT INTO Watchlist (user_id, movie_id, added_date)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(insert_query, (user_id, movie_id, datetime.datetime.now()))
+            g.db.commit()
+            print(f"Successfully added movie {movie_id} to watchlist for user {user_id}")  # Debug log
+            cursor.close()
+            return jsonify({"message": "Added to watchlist"}), 201
+        except mysql.connector.Error as e:
+            print(f"Database error: {str(e)}")  # Debug log
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
 
     except Exception as e:
         print(f"Error adding to watchlist: {str(e)}")
-        return jsonify({"error": "Failed to add to watchlist"}), 500
+        return jsonify({"error": f"Failed to add to watchlist: {str(e)}"}), 500
 
 @app.route("/watchlist/<int:watchlist_id>", methods=["DELETE"])
 def remove_from_watchlist(watchlist_id):
@@ -381,6 +398,35 @@ def remove_from_watchlist(watchlist_id):
     except Exception as e:
         print(f"Error removing from watchlist: {str(e)}")
         return jsonify({"error": "Failed to remove from watchlist"}), 500
+
+@app.route("/watchlist/check/<int:movie_id>", methods=["GET"])
+def check_watchlist_status(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(check_query, (user_id, movie_id))
+        result = cursor.fetchone()
+        cursor.close()
+
+        return jsonify({
+            "isInWatchlist": bool(result)
+        })
+
+    except Exception as e:
+        print(f"Error checking watchlist status: {str(e)}")
+        return jsonify({"error": "Failed to check watchlist status"}), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3001, debug=True)
