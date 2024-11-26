@@ -13,7 +13,7 @@ import sys
 import os
 import jwt
 import datetime
-from flask import Flask, jsonify, render_template, request, g, redirect, url_for
+from flask import Flask, jsonify, render_template, request, g
 from flask_cors import CORS
 import mysql.connector
 import pickle
@@ -108,50 +108,17 @@ def after_request(response):
 
 # test route
 @app.route("/")
-@app.route("/landing")
-def landing_page():
-    if user[1] is None or user[1] == "guest":
-        return redirect(url_for("login"))
-    return render_template("landing_page.html")
-
-
-@app.route("/login")
-def login_page():
-    return render_template("login.html")
-
-
-@app.route("/profile")
-def profile_page():
-    if user[1] is None or user[1] == "guest":
-        return redirect(url_for("login"))
-    return render_template("profile.html")
-
-@app.route("/search_page")
-def search_page():
-    if user[1] is None or user[1] == "guest":
-        return redirect(url_for("login"))
-    return render_template("search_page.html")
-
-
-@app.route("/success")
-def success_page():
-    if user[1] is None or user[1] == "guest":
-        return redirect(url_for("login"))
-    return render_template("success.html")
-
-
-@app.route("/wall")
-def wall_page():
-    if user[1] is None or user[1] == "guest":
-        return redirect(url_for("login"))
-    return render_template("success.html")
+def hello():
+    return "hello"
+    # print(app.url_map)
+    # return render_template("landing_page.html")
 
 @app.route("/getUserName", methods=["GET"])
 def getUsername():
     """
     Get username of the current user
     """
-    username = get_username(g.db, 1)
+    username = get_username(g.db,1)
     return username
 
 
@@ -206,29 +173,24 @@ def wall_posts():
     return get_wall_posts(g.db)
 
 
-@app.route("/review", methods=["GET", "POST"])
+@app.route("/review", methods=["POST"])
 def review():
-    if request.method == "GET":
-        if user[1] is None or user[1] == "guest":
-            return redirect(url_for("login"))
-        return render_template("review.html")
-    else:
-        data = request.get_json()
-
-        # Check if the required data is present
-        if not data or "movie" not in data or "score" not in data or "review" not in data:
-            return jsonify({"error": "Invalid or incomplete data"}), 400
-
-        # Replace with the actual user ID or context as needed
-        user_id = 1  # Example user ID, replace with actual session or request context
-
-        try:
-            # Submit the review using the provided data
-            submit_review(g.db, user_id, data["movie"], data["score"], data["review"])
-            return jsonify({"message": "Review submitted successfully"}), 201
-        except Exception as e:
-            print(f"Error submitting review: {e}")
-            return jsonify({"error": "Could not submit review"}), 500
+    data = request.get_json()
+    
+    # Check if the required data is present
+    if not data or "movie" not in data or "score" not in data or "review" not in data:
+        return jsonify({"error": "Invalid or incomplete data"}), 400
+    
+    # Replace with the actual user ID or context as needed
+    user_id = 1  # Example user ID, replace with actual session or request context
+    
+    try:
+        # Submit the review using the provided data
+        submit_review(g.db, user_id, data["movie"], data["score"], data["review"])
+        return jsonify({"message": "Review submitted successfully"}), 201
+    except Exception as e:
+        print(f"Error submitting review: {e}")
+        return jsonify({"error": "Could not submit review"}), 500
 
 
 @app.route("/signup", methods=["POST"])
@@ -272,8 +234,6 @@ def login():
         token = jwt.encode({
             "user_id": resp,
         }, SECRET_KEY, algorithm="HS256")
-
-        user[1] = token
         
         return jsonify({"message": "Login is successful", "token": token, "status": "success"}), 200
     
