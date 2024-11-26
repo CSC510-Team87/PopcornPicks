@@ -247,12 +247,14 @@ export default function SearchPage() {
                 <div className="space-y-2">
                   {predictedMovies.map((movie, index) => (
                     <Card key={index} className="w-full">
-                      <CardBody className="p-2 flex justify-between">
-                        {movie}
-                        <WatchlistButton 
-                          movieId={index.toString()}
-                          movieTitle={movie}
-                        />
+                      <CardBody className="p-2 flex flex-row justify-between items-center gap-4">
+                        <span className="flex-1 truncate">{movie}</span>
+                        <div className="flex-shrink-0">
+                          <WatchlistButton 
+                            movieId={index.toString()}
+                            movieTitle={movie}
+                          />
+                        </div>
                       </CardBody>
                     </Card>
                   ))}
