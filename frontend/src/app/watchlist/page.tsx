@@ -20,6 +20,8 @@ interface WatchlistMovie {
   imdbId?: string;
 }
 
+const BASE_URL = 'http://127.0.0.1:3001';
+
 export default function WatchlistPage() {
   const [movies, setMovies] = useState<WatchlistMovie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,29 +56,53 @@ export default function WatchlistPage() {
     }
   };
 
-  const removeFromWatchlist = async (movieId: string) => {
+  const removeFromWatchlist = async (watchlistId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`http://127.0.0.1:3001/watchlist/${movieId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
         }
-      });
+        
+        console.log('Attempting to remove watchlist entry with ID:', watchlistId);
+        
+        const response = await fetch(`${BASE_URL}/watchlist/${watchlistId}`, {
+            method: 'DELETE',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to remove movie');
-      }
+        const data = await response.json();
+        console.log('Remove response:', data); // Debug log
 
-      setMovies(movies.filter(movie => movie.id !== movieId));
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to remove movie');
+        }
+        
+        // Only update the UI if the removal was successful
+        setMovies(prevMovies => prevMovies.filter(movie => movie.id !== watchlistId));
+        
+        // Show success message
+        setAlertState({
+            show: true,
+            message: 'Movie removed successfully',
+            type: 'default'
+        });
+        
     } catch (error) {
-      console.error('Error removing movie:', error);
-      setAlertState({
-        show: true,
-        message: 'Error removing movie. Please try again later.',
-        type: 'destructive'
-      });
+        console.error('Error removing movie:', error);
+        const errorMessage = error instanceof Error 
+            ? (error.message === 'Failed to fetch' 
+                ? 'Unable to connect to server. Please check your connection.' 
+                : error.message)
+            : 'Error removing movie';
+            
+        setAlertState({
+            show: true,
+            message: errorMessage,
+            type: 'destructive'
+        });
     }
   };
 

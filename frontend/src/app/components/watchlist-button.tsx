@@ -98,10 +98,8 @@ export default function WatchlistButton({ movieId, movieTitle }: WatchlistButton
           }
         });
 
-        const responseData = await response.json();
-        console.log('Remove response:', responseData); // Debug log
-
         if (!response.ok) {
+          const responseData = await response.json();
           throw new Error(responseData.error || 'Failed to remove from watchlist');
         }
 
