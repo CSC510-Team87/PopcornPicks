@@ -59,7 +59,7 @@ export default function ProfilePage() {
   if (username === userName) {
     setAlertState({
       show: true,
-      message: "You cannot add yourself as a friend.",
+      message: "You cannot add yourself as a friend:(",
       type: 'default' 
     });
     return; // Stop further execution
