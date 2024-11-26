@@ -63,9 +63,9 @@ user = {1: None}
 
 DATABASE_CONFIG = {
     'host': 'localhost',
-    'port': 27276,
+    'port': 3306,
     'user': 'root',
-    'password': '18970926554Nicaia??',
+    'password': 'password',
     'database': 'popcornpicksdb'
 }
 

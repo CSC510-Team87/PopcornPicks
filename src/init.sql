@@ -28,6 +28,16 @@ CREATE TABLE IF NOT EXISTS Movies (
   UNIQUE INDEX imdb_id_UNIQUE (imdb_id ASC)
 );
 
+-- Create the Watchlist table
+CREATE TABLE IF NOT EXISTS Watchlist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    movie_id INT NOT NULL,
+    added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(idUsers),
+    FOREIGN KEY (movie_id) REFERENCES Movies(idMovies)
+);
+
 -- Create the Ratings table
 CREATE TABLE IF NOT EXISTS Ratings (
   idRatings INT NOT NULL AUTO_INCREMENT,
