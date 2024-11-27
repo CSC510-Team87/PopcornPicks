@@ -68,11 +68,11 @@ PopcornPicks: Your movie recommender! Input movies, get tailored suggestions, an
 Checkout for project documentation [here](https://github.com/brwali/PopcornPicks/tree/master/docs)
 
 ## Project Presentation Videos
-### New Features 2 minute demo
-[![why contribute video](https://img.youtube.com/vi/QHju8EzQUQ4/0.jpg)](https://www.youtube.com/watch?v=QHju8EzQUQ4)
+### Team 87 Promotional video
+[![promotional video](https://img.youtube.com/vi/A3n7fSBWjXI/sddefault.jpg)](https://youtu.be/A3n7fSBWjXI)
 
-### Why contribute?
-[![why contribute video](https://img.youtube.com/vi/aQ1cryH4B7A/0.jpg)](https://www.youtube.com/watch?v=aQ1cryH4B7A)
+### Team 87 Demo Video
+[![demo video](https://img.youtube.com/vi/PFNtmKUQpv4/sddefault.jpg)](https://youtu.be/PFNtmKUQpv4)
 
 
 ## Project Description
