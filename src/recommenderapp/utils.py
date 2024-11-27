@@ -162,13 +162,18 @@ def add_friend(db, username, user_id):
 
     if result:
         friend_id = result[0]
+        # Check if the friendship already exists
         executor.execute(
-            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s);",
-            (user_id, friend_id),
+            "SELECT * FROM Friends WHERE (idUsers = %s AND idFriend = %s) OR (idUsers = %s AND idFriend = %s);",
+            (user_id, friend_id, friend_id, user_id)
         )
+        if executor.fetchone():
+            raise ValueError("You are already friends with this user")
+
+        # Insert the friendship record if not exists
         executor.execute(
-            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s);",
-            (friend_id, user_id),
+            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s), (%s, %s);",
+            (user_id, friend_id, friend_id, user_id),
         )
         db.commit()
     else:

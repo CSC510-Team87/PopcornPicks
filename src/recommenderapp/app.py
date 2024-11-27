@@ -204,15 +204,17 @@ def add_friend_route():
     
 
     if not username or not user_id:
-        return jsonify({"error": "Invalid data"}), 400
+        return jsonify({"error": "Invalid data: username is required"}), 400
 
     # Call add_friend with proper user_id
     try:
         add_friend(g.db, username, user_id)
         return jsonify({"message": "Friend added successfully"}), 200
-    except Exception as e:
-        print(f"Error adding friend: {e}")
-        return jsonify({"error": "Could not add friend"}), 500
+    except ValueError as e:
+        if str(e) == "Friend not found in the database":
+            return jsonify({"error": str(e)}), 400  # Bad request for not found username
+        else:
+            return jsonify({"error": str(e)}), 409  # Conflict for already existing friendship
     
 @app.route("/search", methods=["POST"])
 def search_movies():

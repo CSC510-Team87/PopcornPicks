@@ -88,25 +88,23 @@ export default function ProfilePage() {
   }
   axios.post("http://127.0.0.1:3001/friend", { user: username }, {
     headers: {
-      'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`
     }
-  })
-  .then(response => {
-    setAlertState({
-      show: true,
-      message: 'Friend added successfully',
-      type: 'default'
-    });
-  })
-  .catch(error => {
-    console.error("Error adding friend:", error);
-    setAlertState({
-      show: true,
-      message: error.response.data.error || 'Error adding friend',
-      type: 'default'
-    });
+  }).then(response => {
+      setAlertState({
+          show: true,
+          message: 'Friend added successfully',
+          type: 'default'  // Assuming you have a 'success' type for positive feedback
+      });
+  }).catch(error => {
+      const message = error.response?.data?.error || 'Error adding friend.';
+      setAlertState({
+          show: true,
+          message: message,
+          type: 'default'  // Show error message returned from the server
+      });
   });
-};
+  };
 
   
 return (
