@@ -27,15 +27,24 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    // Fetch user name
-    axios.get("http://127.0.0.1:3001/getUserName").then((response) => {
-      setUserName(response.data);
-    });
 
-    // Fetch user's recent movies
-    axios.get("http://127.0.0.1:3001/getRecentMovies").then((response) => {
+  // Fetch user name
+  axios.get("http://127.0.0.1:3001/getUserName", {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  }).then((response) => {
+    setUserName(response.data);
+  });
+
+  // Fetch user's recent movies
+  axios.get("http://127.0.0.1:3001/getRecentMovies", {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  }).then((response) => {
       setUserMovies(response.data);
-    });
+  });
 
     // Fetch friends list and their recent movies
     axios.get("http://127.0.0.1:3001/getFriends").then((response) => {

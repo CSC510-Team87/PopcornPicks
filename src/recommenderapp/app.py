@@ -130,8 +130,25 @@ def getRecentMovies():
     """
     Gets recent movies of the current user
     """
-    recent_movies = get_recent_movies(g.db, 1)
-    return recent_movies
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        recent_movies = get_recent_movies(g.db, user_id)
+        return recent_movies
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/friend", methods=["POST"])
 def add_friend_route():
@@ -175,7 +192,6 @@ def review():
     if not data or "movie" not in data or "score" not in data or "review" not in data:
         return jsonify({"error": "Invalid or incomplete data"}), 400
     
-    # Extract user id token
     # Get token from header
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
@@ -186,7 +202,7 @@ def review():
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         user_id = payload['user_id']
-        print("userid:", user_id)
+
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
     
