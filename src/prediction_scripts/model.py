@@ -27,7 +27,7 @@ class MovieRecommender:
         self.movies['genres'] = self.movies['genres'].apply(lambda x: set(x.split('|')))
     
     
-    def recommend(self, movie_title, n_recommendations=5):
+    def recommend(self, movie_title, n_recommendations=10):
         """
         Get movie recommendations based on similarity
         
@@ -67,6 +67,6 @@ if __name__ == "__main__":
     recommender.prepare_data('../../data/movies.csv')
     
     # Get recommendations
-    recommendations = recommender.recommend('Toy Story (1995)')
+    recommendations = recommender.recommend('The Avengers (2012)')
     for rec in recommendations:
         print(rec)
