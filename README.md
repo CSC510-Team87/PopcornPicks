@@ -141,10 +141,10 @@ Please refer to the [CONTRIBUTING.md](https://github.com/brwali/PopcornPicks/blo
 
 <table>
   <tr>
-    <td><a href="https://github.com/CSC510-Team87/PopcornPicks">Project 3</a></td>
-    <td align="center"><a https://github.com/gwenmason125/"><br /><sub><b>Gwen Mason</b></sub></a></td>
+    <td><a href="https://github.com/CSC510-Team87/PopcornPicks">Team 87 Project 3</a></td>
+    <td align="center"><a href=https://github.com/gwenmason125/"><br /><sub><b>Gwen Mason</b></sub></a></td>
     <td align="center"><a href="https://github.com/yicharlieyi/"><br /><sub><b>Yi Zhang</b></sub></a><br /></td>
-    <td align="center"><a href="https://github.com/kevindai2002/"><br /><sub><b>Nicholas Foster</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/kevindai2002/"><br /><sub><b>Kevin Dai</b></sub></a><br /></td>
   </tr>
 </table>
 
