@@ -99,6 +99,30 @@ class Tests(unittest.TestCase):
         ]
         self.assertTrue(filtered_dict == expected_resp)
 
+    def test_search_symbol(self):
+        """
+        Test case 5
+        """
+        search_word = "_"
+        finder = Search()
+        filtered_dict = finder.results_top_ten(search_word)
+        expected_resp = [
+            "Cry_Wolf (2005)",
+            "Sx_Tape (2014)",
+        ]
+        self.assertTrue(filtered_dict == expected_resp)
+
+    def test_search_whitespace(self):
+        """
+        Test case 6
+        """
+        search_word = " "
+        finder = Search()
+        filtered_dict = finder.results_top_ten(search_word)
+        print(filtered_dict)
+        expected_resp = []
+        self.assertFalse(filtered_dict == expected_resp)
+
 
 if __name__ == "__main__":
     unittest.main()
