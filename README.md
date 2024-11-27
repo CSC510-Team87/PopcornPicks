@@ -141,7 +141,7 @@ Please refer to the [CONTRIBUTING.md](https://github.com/brwali/PopcornPicks/blo
 
 <table>
   <tr>
-    <td><a href="https://github.com/brwali/PopcornPicks">Project 3</a></td>
+    <td><a href="https://github.com/brwali/PopcornPicks">Team 87 Project 3</a></td>
     <td align="center"><a href="https://github.com/brwali/"><img src="https://avatars.githubusercontent.com/u/144480335?v=4" width="75px;" alt=""/><br /><sub><b>Brandon Walia</b></sub></a></td>
     <td align="center"><a href="https://github.com/nathankohen/"><img src="https://avatars.githubusercontent.com/u/99231385?v=4" width="75px;" alt=""/><br /><sub><b>Nathan Kohen</b></sub></a><br /></td>
     <td align="center"><a href="https://github.com/nfoster1492/"><img src="https://avatars.githubusercontent.com/u/144182217?v=4" width="75px;" alt=""/><br /><sub><b>Nicholas Foster</b></sub></a><br /></td>
