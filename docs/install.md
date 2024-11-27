@@ -36,21 +36,21 @@
 ## Step 6: Python Packages
    Run the following command in the terminal from the /frontend directory
 
-   npm install
-   npm install @mui/material @emotion/react @emotion/styled
-   npm run dev
+   `npm install`
+   `npm install @mui/material @emotion/react @emotion/styled`
+   `npm run dev`
 
    This starts the frontend.
 
    Now open another terminal and navigate to src/recommenderapp
    Run the following command
    
-  python app.py
+   `python app.py`
    
     
 ## Step 7: Open the URL in your browser 
 
     Go to the following page:
 
-    http://localhost:3000/login
+    `http://localhost:3000/login`
 
