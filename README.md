@@ -19,8 +19,7 @@
 [![DOI](https://zenodo.org/badge/713118657.svg)](https://zenodo.org/doi/10.5281/zenodo.10210915)
   
 
-  
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/header_display.png" alt="drawing" style="width:1000px;"/>
+
 <b>PopcornPicks is more than just a movie recommender system; it's a gateway to a world of cinematic adventures. With an ever-expanding library of films and a powerful recommendation algorithm, PopcornPicks is here to transform the way you discover, enjoy, and connect with movies.</b>
 
 # Contents  
