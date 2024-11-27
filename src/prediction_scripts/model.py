@@ -11,6 +11,7 @@ class MovieRecommender:
         self.ps = PorterStemmer()
         self.cv = CountVectorizer(max_features=5000, stop_words='english')
         
+        
     def prepare_data(self, movies_path, ratings_path=None):
         """
         Prepare and process the movie data for recommendation
@@ -66,6 +67,6 @@ if __name__ == "__main__":
     recommender.prepare_data('../../data/movies.csv')
     
     # Get recommendations
-    recommendations = recommender.recommend('The Avengers (2012)')
+    recommendations = recommender.recommend('Toy Story (1995)')
     for rec in recommendations:
         print(rec)
