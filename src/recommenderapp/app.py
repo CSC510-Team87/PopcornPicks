@@ -33,16 +33,16 @@ import logging
 #     get_friends,
 #     get_recent_friend_movies,
 # )
-from utils import get_friends
-from utils import get_username
-from utils import get_recent_movies
-from utils import add_friend
-from utils import get_wall_posts
-from utils import submit_review
-from utils import create_account
-from utils import login_to_account
-from search import Search
-from item_based import recommend_for_new_user
+from src.recommenderapp.utils import get_friends
+from src.recommenderapp.utils import get_username
+from src.recommenderapp.utils import get_recent_movies
+from src.recommenderapp.utils import add_friend
+from src.recommenderapp.utils import get_wall_posts
+from src.recommenderapp.utils import submit_review
+from src.recommenderapp.utils import create_account
+from src.recommenderapp.utils import login_to_account
+from src.recommenderapp.search import Search
+from src.recommenderapp.item_based import recommend_for_new_user
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -236,8 +236,10 @@ def login():
         app.logger.error(f"Login failed: {str(e)}")
         return jsonify({"error": "Login failed, please check your credentials", "status": "fail"}), 401
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+movies_path = os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'data', 'movies.csv')
 recommender = MovieRecommender()
-recommender.prepare_data('../../data/movies.csv')
+recommender.prepare_data(movies_path)
 
 @app.route('/predict', methods=['POST'])
 def predict():
