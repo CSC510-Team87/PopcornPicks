@@ -119,7 +119,6 @@ class Tests(unittest.TestCase):
         search_word = " "
         finder = Search()
         filtered_dict = finder.results_top_ten(search_word)
-        print(filtered_dict)
         expected_resp = []
         self.assertFalse(filtered_dict == expected_resp)
 

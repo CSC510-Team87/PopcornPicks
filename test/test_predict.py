@@ -137,7 +137,54 @@ class Tests(unittest.TestCase):
         recommendations = recommender.recommend('Moana (2016)')
         found = any("Smurfs: The Lost Village (2017)" == movie['title'] for movie in recommendations)
         self.assertTrue(found)
+    
+    def test_adventure(self):
+        """
+        Test case 15
+        """
+        recommendations = recommender.recommend('Fly Me to the Moon (2008)')
+        found = any("Jimmy Neutron: Boy Genius (2001)" == movie['title'] for movie in recommendations)
+        self.assertTrue(found)
+    
+    def test_mystery(self):
+        """
+        Test case 16
+        """
+        recommendations = recommender.recommend('13 Beloved (2006)')
+        found = any("The Hound of the Baskervilles (1978)" == movie['title'] for movie in recommendations)
+        self.assertTrue(found)
+    
+    def test_comedy(self):
+        """
+        Test case 17
+        """
+        recommendations = recommender.recommend('A Girl Cut in Two (2007)')
+        found = any("Idiot Box (1996)" == movie['title'] for movie in recommendations)
+        self.assertTrue(found)
 
+    def test_drama(self):
+        """
+        Test case 18
+        """
+        recommendations = recommender.recommend('In the City of Sylvia (2007)')
+        found = any("Naked Under the Moon (1999)" == movie['title'] for movie in recommendations)
+        self.assertTrue(found)
+
+    def test_documentary(self):
+        """
+        Test case 19
+        """
+        recommendations = recommender.recommend('Trumbo (2007)')
+        found = any("In the Shadow of the Moon (2007)" == movie['title'] for movie in recommendations)
+        self.assertTrue(found)
+
+    def test_horror(self):
+        """
+        Test case 20
+        """
+        recommendations = recommender.recommend('Martyrs (2008)')
+        found = any("House Of 9 (2005)" == movie['title'] for movie in recommendations)
+        self.assertTrue(found)
 
 if __name__ == "__main__":
     unittest.main()
