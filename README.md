@@ -12,7 +12,6 @@
 [![StyleCheck: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint) 
 [![HitCount](https://hits.dwyl.com/CSC510-Team87/PopcornPicks.svg)](https://hits.dwyl.com/CSC510-Team87/PopcornPicks) 
 ![GitHub contributors](https://img.shields.io/github/contributors/CSC510-Team87/PopcornPicks) 
-#![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/CSC510-Team87/PopcornPicks) 
 ![GitHub repo size](https://img.shields.io/github/repo-size/CSC510-Team87/PopcornPicks) 
 [![Black](https://github.com/CSC510-Team87/PopcornPicks/actions/workflows/black.yml/badge.svg)](https://github.com/CSC510-Team87/PopcornPicks/actions/workflows/black.yml) 
 [![GitHub closed issues by-label](https://img.shields.io/github/issues-closed-raw/CSC510-Team87/PopcornPicks/bug?color=green&label=Squished%20bugs)](https://github.com/CSC510-Team87/PopcornPicks/issues?q=is%3Aissue+label%3Abug+is%3Aclosed) 
