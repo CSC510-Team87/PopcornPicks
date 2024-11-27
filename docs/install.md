@@ -52,5 +52,5 @@
 
     Go to the following page:
 
-    http://localhost:3000/login
+    `http://localhost:3000/login`
 
