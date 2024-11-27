@@ -7,11 +7,17 @@ import { Button, Input } from "@nextui-org/react";
 import { Alert, AlertDescription } from "../components/alert";
 import axios from "axios";
 
+// Interfance for the movie subject
+interface Movie {
+  name: string;
+  score: number;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [friendUsername, setFriendUsername] = useState("")
-  const [userMovies, setUserMovies] = useState([]);
+  const [userMovies, setUserMovies] = useState<Movie[]>([]);
   const [friendsList, setFriendsList] = useState([]);
   const [recentFriendMovies, setRecentFriendMovies] = useState<Record<string, any[]>>({});
   const [alertState, setAlertState] = useState({
@@ -21,59 +27,87 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    // Fetch user name
-    axios.get("http://127.0.0.1:3001/getUserName").then((response) => {
-      setUserName(response.data);
-    });
 
-    // Fetch user's recent movies
-    axios.get("http://127.0.0.1:3001/getRecentMovies").then((response) => {
-      setUserMovies(response.data);
-    });
+  // Fetch user name
+  axios.get("http://127.0.0.1:3001/getUserName", {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  }).then((response) => {
+    setUserName(response.data);
+  });
+
+  // Fetch user's recent movies
+  axios.get("http://127.0.0.1:3001/getRecentMovies", {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  }).then((response) => {
+    setUserMovies(response.data);
+  });
 
     // Fetch friends list and their recent movies
-    axios.get("http://127.0.0.1:3001/getFriends").then((response) => {
+    axios.get("http://127.0.0.1:3001/getFriends", {
+      headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then((response) => {
       setFriendsList(response.data);
-      console.log("response stat", response.status)
     });
   }, []);
 
   const showFriendMovies = (friendName: string) => {
     if (recentFriendMovies[friendName]) {
-      setRecentFriendMovies((prev) => ({ ...prev, [friendName]: [] }));
+        setRecentFriendMovies((prev) => ({ ...prev, [friendName]: [] }));
     } else {
-      axios.post("http://127.0.0.1:3001/getRecentFriendMovies", { friend: friendName }).then((response) => {
-        setRecentFriendMovies((prev) => ({ ...prev, [friendName]: response.data }));
-      });
+        axios.get(`http://127.0.0.1:3001/getRecentFriendMovies?friend=${encodeURIComponent(friendName)}`)
+            .then((response) => {
+                setRecentFriendMovies((prev) => ({ ...prev, [friendName]: response.data }));
+            })
+            .catch((error) => {
+                console.error("Failed to fetch friend's movies:", error);
+            });
     }
-  };
+};
 
   const addFriend = (username: string) => {
-    axios
-      .post("http://127.0.0.1:3001/friend", { user: username })  // Correct JSON structure
-      .then((response) => {
-        if (response.status === 200) {
-          setAlertState({
-            show: true,
-            message: 'Friend added successfully',
-            type: 'default'
-          });
-        } else {
-          setAlertState({
-            show: true,
-            message: 'Error adding friend :(',
-            type: 'default'
-          });
-        }
-      })
-      .catch((error) => {
-        setAlertState({
+  // Prevent adding oneself as a friend
+  if (username === userName) {
+    setAlertState({
+      show: true,
+      message: "You cannot add yourself as a friend:(",
+      type: 'default' 
+    });
+    return; // Stop further execution
+  }
+  // Ensure token is retrived correctly
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setAlertState({
+      show: true,
+      message: "Authentication token is missing.",
+      type: 'default'
+    });
+    return; // Stop further execution if token is missing
+  }
+  axios.post("http://127.0.0.1:3001/friend", { user: username }, {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  }).then(response => {
+      setAlertState({
           show: true,
-          message: 'Error adding friend :(',
-          type: 'default'
-        });
-        console.error("Error adding friend:", error);
+          message: 'Friend added successfully',
+          type: 'default'  // Assuming you have a 'success' type for positive feedback
       });
+  }).catch(error => {
+      const message = error.response?.data?.error || 'Error adding friend.';
+      setAlertState({
+          show: true,
+          message: message,
+          type: 'default'  // Show error message returned from the server
+      });
+  });
   };
 
   
@@ -90,11 +124,9 @@ return (
         <h2 className="text-2xl font-bold mb-4 text-black">Your Reviewed Movies</h2>
         <ul className="space-y-2">
           {userMovies.map((movie, index) => (
-            <li key={index} className="text-lg">"Movie Name" {
-              //movie.name
-            }: {
-                //movie.score
-              } 10/10 stars</li>
+            <li key={index} className="text-lg text-black">
+              {movie.name}: {Array.from({ length: 10 }, (_, i) => i < movie.score ? '★' : '☆').join('')}
+            </li>
           ))}
         </ul>
       </section>
@@ -113,10 +145,10 @@ return (
                 {friend}
               </Button>
               {recentFriendMovies[friend] && (
-                <div className="absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg p-4 z-10">
+                <div className="absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg p-1 z-10">
                   {recentFriendMovies[friend].map((movie, idx) => (
                     <p key={idx} className="text-gray-700">
-                      {movie.name}: {movie.score}/10 stars
+                      {movie.movie_name}: {Array.from({ length: 10 }, (_, i) => i < movie.score ? '★' : '☆').join('')}
                     </p>
                   ))}
                 </div>
@@ -139,6 +171,7 @@ return (
         <Button
           onClick={() => addFriend(friendUsername)} // Pass friendUsername here
           color="primary"
+          disabled={!friendUsername}  // Disable if input is empty
         >
           Add Friend
         </Button>

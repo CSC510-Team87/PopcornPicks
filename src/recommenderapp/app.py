@@ -37,6 +37,7 @@ from utils import get_friends
 from utils import get_username
 from utils import get_recent_movies
 from utils import add_friend
+from utils import get_recent_friend_movies
 from utils import get_wall_posts
 from utils import submit_review
 from utils import create_account
@@ -71,7 +72,7 @@ DATABASE_CONFIG = {
     'host': 'localhost',
     'port': 27276,
     'user': 'root',
-    'password': 'password',
+    'password': '18970926554Nicaia??',
     'database': 'popcornpicksdb'
 }
 
@@ -113,8 +114,25 @@ def getUsername():
     """
     Get username of the current user
     """
-    username = get_username(g.db,1)
-    return username
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        username = get_username(g.db,user_id)
+        return username
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/getFriends", methods=["GET"])
@@ -122,33 +140,94 @@ def getFriends():
     """
     Gets friends of the current user
     """
-    friends = get_friends(g.db, 1)
-    return friends
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        friends = get_friends(g.db, user_id)
+        return friends
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/getRecentMovies", methods=["GET"])
 def getRecentMovies():
     """
     Gets recent movies of the current user
     """
-    recent_movies = get_recent_movies(g.db, 1)
-    return recent_movies
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        recent_movies = get_recent_movies(g.db, user_id)
+        return recent_movies
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/friend", methods=["POST"])
 def add_friend_route():
     data = request.get_json()
     username = data.get("user")  # Friend's username from the request
-    user_id = 1  # Replace this with the actual user's ID, e.g., session or request context
+
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
 
     if not username or not user_id:
-        return jsonify({"error": "Invalid data"}), 400
+        return jsonify({"error": "Invalid data: username is required"}), 400
 
     # Call add_friend with proper user_id
     try:
         add_friend(g.db, username, user_id)
         return jsonify({"message": "Friend added successfully"}), 200
+    except ValueError as e:
+        if str(e) == "Friend not found in the database":
+            return jsonify({"error": str(e)}), 400  # Bad request for not found username
+        else:
+            return jsonify({"error": str(e)}), 409  # Conflict for already existing friendship
+    
+
+@app.route('/getRecentFriendMovies', methods=['GET'])
+def get_recent_friend_movies_route():
+    friend_username = request.args.get("friend")
+    if not friend_username:
+        return jsonify({'error': 'Missing friend username'}), 400
+    
+    try:
+        return get_recent_friend_movies(g.db, friend_username)
     except Exception as e:
-        print(f"Error adding friend: {e}")
-        return jsonify({"error": "Could not add friend"}), 500
+        return jsonify({'error': str(e)}), 500
     
 @app.route("/search", methods=["POST"])
 def search_movies():
@@ -165,8 +244,7 @@ def search_movies():
 
 @app.route("/reviews", methods=["GET"])
 def wall_posts():
-    return get_wall_posts(g.db)
-
+    return get_wall_posts(g.db) 
 
 @app.route("/review", methods=["POST"])
 def review():
@@ -176,8 +254,19 @@ def review():
     if not data or "movie" not in data or "score" not in data or "review" not in data:
         return jsonify({"error": "Invalid or incomplete data"}), 400
     
-    # Replace with the actual user ID or context as needed
-    user_id = 1  # Example user ID, replace with actual session or request context
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     
     try:
         # Submit the review using the provided data
@@ -235,6 +324,7 @@ def login():
     except Exception as e:
         app.logger.error(f"Login failed: {str(e)}")
         return jsonify({"error": "Login failed, please check your credentials", "status": "fail"}), 401
+
 
 recommender = MovieRecommender()
 recommender.prepare_data('../../data/movies.csv')
@@ -303,6 +393,7 @@ def predict():
     except Exception as e:
         logging.error(f"Error in prediction: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route("/watchlist", methods=["GET"])
 def get_watchlist():

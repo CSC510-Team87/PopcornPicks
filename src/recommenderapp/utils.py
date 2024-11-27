@@ -162,13 +162,18 @@ def add_friend(db, username, user_id):
 
     if result:
         friend_id = result[0]
+        # Check if the friendship already exists
         executor.execute(
-            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s);",
-            (user_id, friend_id),
+            "SELECT * FROM Friends WHERE (idUsers = %s AND idFriend = %s) OR (idUsers = %s AND idFriend = %s);",
+            (user_id, friend_id, friend_id, user_id)
         )
+        if executor.fetchone():
+            raise ValueError("You are already friends with this user")
+
+        # Insert the friendship record if not exists
         executor.execute(
-            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s);",
-            (friend_id, user_id),
+            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s), (%s, %s);",
+            (user_id, friend_id, friend_id, user_id),
         )
         db.commit()
     else:
@@ -267,28 +272,43 @@ def get_username(db, user):
     return jsonify(result[0][0])
 
 
-def get_recent_friend_movies(db, user):
+def get_recent_friend_movies(db, friend_username):
     """
-    Utility function for getting a certain friends recent movies
+    Fetches a certain friend's recent movies from the database.
     """
-    executor = db.cursor()
-    executor.execute("SELECT idUsers FROM Users WHERE username = %s;", [str(user)])
-    result = executor.fetchall()
-    user_id = result[0][0]
-    executor.execute(
-        "SELECT name, score FROM Ratings AS r JOIN \
-    Movies AS m ON m.idMovies = r.movie_id \
-    WHERE user_id = %s \
-    ORDER BY time DESC \
-    LIMIT 5;",
-        [int(user_id)],
-    )
-    rows = [x[0] for x in executor.description]
-    result = executor.fetchall()
-    json_data = []
-    for r in result:
-        json_data.append(dict(zip(rows, r)))
-    return jsonify(json_data)
+    cursor = db.cursor(dictionary=True)
+    try:
+        # Check if the friend exists and get their user ID
+        cursor.execute("SELECT idUsers FROM Users WHERE username = %s;", (friend_username,))
+        friend = cursor.fetchone()
+
+        if not friend:
+            return jsonify({'error': 'Friend not found'}), 404
+
+        friend_id = friend['idUsers']
+
+        # Fetch the recent movies that the friend has rated
+        cursor.execute(
+            "SELECT m.name AS movie_name, r.score, r.time "
+            "FROM Ratings AS r "
+            "JOIN Movies AS m ON m.idMovies = r.movie_id "
+            "WHERE r.user_id = %s "
+            "ORDER BY r.time DESC "
+            "LIMIT 5;",
+            (friend_id,)
+        )
+        
+        movies = cursor.fetchall()
+
+        if not movies:
+            return jsonify({'message': 'No recent movies found for this friend'}), 200
+
+        return jsonify(movies), 200
+    except Exception as e:
+        print(f"Error fetching friend's movies: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
 
 
 def get_friends(db, user):

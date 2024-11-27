@@ -9,7 +9,7 @@ import mysql.connector
 # Database connection settings
 DB_HOST = 'localhost'
 DB_USER = 'root'
-DB_PASSWORD = 'password'
+DB_PASSWORD = '18970926554Nicaia??'
 DB_NAME = 'popcornpicksdb'
 DB_PORT = 27276
 
