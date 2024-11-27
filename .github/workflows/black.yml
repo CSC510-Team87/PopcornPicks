@@ -23,11 +23,11 @@ jobs:
       run: pip install black
 
     - name: Run Black
-      run: black . --check  # Use '--check' to see if changes are needed without applying them
+      run: black .  # This will format your code
 
     - name: Commit changes
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: 'Apply black formatting'
         branch: ${{ github.head_ref }}
-        file_pattern: '*.py'  # Specify the file pattern to commit changes
+        file_pattern: '*.py'  # Only commit changes to Python files
