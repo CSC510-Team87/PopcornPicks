@@ -69,7 +69,7 @@ user = {1: None}
 
 DATABASE_CONFIG = {
     'host': 'localhost',
-    'port': 3306,
+    'port': 27276,
     'user': 'root',
     'password': 'password',
     'database': 'popcornpicksdb'
@@ -270,6 +270,16 @@ def predict():
                         if result:
                             # Get the movie's ID from the result
                             movie_id = result[0]
+
+                            cursor = g.db.cursor()
+                            cursor.execute("SELECT overview FROM Movies WHERE name = %s", (rec['title'],))
+                            overview = cursor.fetchone()[0]
+                            cursor.close()
+
+                            cursor = g.db.cursor()
+                            cursor.execute("SELECT streaming_platforms FROM Movies WHERE name = %s", (rec['title'],))
+                            streaming_platforms = cursor.fetchone()[0]
+                            cursor.close()
                             
                             # Add the title to our set of processed recommendations
                             # to avoid duplicates
@@ -278,7 +288,9 @@ def predict():
                             # Add both the ID and title to our final results
                             movie_details.append({
                                 'id': movie_id,
-                                'title': rec['title']
+                                'title': rec['title'],
+                                'overview': overview,
+                                'streaming_platforms': streaming_platforms.replace("|", ", ")
                             })
             except IndexError:
                 continue
