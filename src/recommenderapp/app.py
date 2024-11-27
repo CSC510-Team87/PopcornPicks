@@ -113,8 +113,25 @@ def getUsername():
     """
     Get username of the current user
     """
-    username = get_username(g.db,1)
-    return username
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        username = get_username(g.db,user_id)
+        return username
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/getFriends", methods=["GET"])
@@ -122,8 +139,25 @@ def getFriends():
     """
     Gets friends of the current user
     """
-    friends = get_friends(g.db, 1)
-    return friends
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        friends = get_friends(g.db, user_id)
+        return friends
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/getRecentMovies", methods=["GET"])
 def getRecentMovies():
@@ -154,7 +188,20 @@ def getRecentMovies():
 def add_friend_route():
     data = request.get_json()
     username = data.get("user")  # Friend's username from the request
-    user_id = 1  # Replace this with the actual user's ID, e.g., session or request context
+
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
 
     if not username or not user_id:
         return jsonify({"error": "Invalid data"}), 400

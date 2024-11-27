@@ -43,13 +43,16 @@ export default function ProfilePage() {
         Authorization: `Bearer ${localStorage.getItem('token')}`
     }
   }).then((response) => {
-      setUserMovies(response.data);
+    setUserMovies(response.data);
   });
 
     // Fetch friends list and their recent movies
-    axios.get("http://127.0.0.1:3001/getFriends").then((response) => {
+    axios.get("http://127.0.0.1:3001/getFriends", {
+      headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then((response) => {
       setFriendsList(response.data);
-      console.log("response stat", response.status)
     });
   }, []);
 
@@ -73,32 +76,37 @@ export default function ProfilePage() {
     });
     return; // Stop further execution
   }
-    axios
-      .post("http://127.0.0.1:3001/friend", { user: username })  // Correct JSON structure
-      .then((response) => {
-        if (response.status === 200) {
-          setAlertState({
-            show: true,
-            message: 'Friend added successfully',
-            type: 'default'
-          });
-        } else {
-          setAlertState({
-            show: true,
-            message: 'Error adding friend :(',
-            type: 'default'
-          });
-        }
-      })
-      .catch((error) => {
-        setAlertState({
-          show: true,
-          message: 'Error adding friend :(',
-          type: 'default'
-        });
-        console.error("Error adding friend:", error);
-      });
-  };
+  // Ensure token is retrived correctly
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setAlertState({
+      show: true,
+      message: "Authentication token is missing.",
+      type: 'default'
+    });
+    return; // Stop further execution if token is missing
+  }
+  axios.post("http://127.0.0.1:3001/friend", { user: username }, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  .then(response => {
+    setAlertState({
+      show: true,
+      message: 'Friend added successfully',
+      type: 'default'
+    });
+  })
+  .catch(error => {
+    console.error("Error adding friend:", error);
+    setAlertState({
+      show: true,
+      message: error.response.data.error || 'Error adding friend',
+      type: 'default'
+    });
+  });
+};
 
   
 return (
