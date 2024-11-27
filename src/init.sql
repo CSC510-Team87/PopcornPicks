@@ -22,10 +22,25 @@ CREATE TABLE IF NOT EXISTS Users (
 -- Create the Movies table
 CREATE TABLE IF NOT EXISTS Movies (
   idMovies INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(128) NOT NULL,
-  imdb_id VARCHAR(45) NOT NULL,
+  name VARCHAR(128) NOT NULL,               -- Maps to 'title'
+  imdb_id VARCHAR(45) NOT NULL,             -- Maps to 'imdb_id'
+  genres VARCHAR(255),                      -- Maps to 'genres', assuming a pipe-separated string
+  overview TEXT,                            -- Maps to 'overview', as descriptions can be long
+  poster_path VARCHAR(2083),                -- Maps to 'poster_path', accommodates long URLs
+  runtime INT,                              -- Maps to 'runtime', stored as an integer
+  streaming_platforms TEXT,                 -- Maps to 'streaming_platforms'
   PRIMARY KEY (idMovies),
   UNIQUE INDEX imdb_id_UNIQUE (imdb_id ASC)
+);
+
+-- Create the Watchlist table
+CREATE TABLE IF NOT EXISTS Watchlist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    movie_id INT NOT NULL,
+    added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(idUsers),
+    FOREIGN KEY (movie_id) REFERENCES Movies(idMovies)
 );
 
 -- Create the Ratings table

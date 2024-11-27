@@ -12,6 +12,8 @@ import {
 } from "@nextui-org/react";
 import { Alert, AlertDescription } from '@/app/components/alert';
 import { LoaderIcon } from "lucide-react";
+import WatchlistButton from "@/app/components/watchlist-button";
+import Tooltip from "@mui/material/Tooltip";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function SearchPage() {
   const [selectedMovies, setSelectedMovies] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [recentMovies, setRecentMovies] = useState<string[]>([]);
-  const [predictedMovies, setPredictedMovies] = useState<string[]>([]);
+  const [predictedMovies, setPredictedMovies] = useState<Array<{id: string, title: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [alertState, setAlertState] = useState({
     show: false,
@@ -234,27 +236,57 @@ export default function SearchPage() {
           </Card>
 
           {/* Recommended Movies Section */}
-          {predictedMovies.length > 0 && (
-            <Card>
-              <CardHeader className="flex gap-3">
-                <div className="flex flex-col">
-                  <p className="text-lg font-bold">Recommended Movies</p>
-                </div>
-              </CardHeader>
-              <Divider/>
-              <CardBody>
-                <div className="space-y-2">
-                  {predictedMovies.map((movie, index) => (
-                    <Card key={index} className="w-full">
-                      <CardBody className="p-2">
-                        {movie}
-                      </CardBody>
-                    </Card>
-                  ))}
+{predictedMovies.length > 0 && (
+  <Card>
+    <CardHeader className="flex gap-3">
+      <div className="flex flex-col">
+        <p className="text-lg font-bold">Recommended Movies</p>
+      </div>
+    </CardHeader>
+    <Divider />
+    <CardBody>
+      <div className="space-y-2">
+        {predictedMovies.map((movie) => (
+          <Tooltip
+          key={movie.id}
+          title={
+            <div className="p-2">
+              <p className="font-bold">Overview:</p>
+              <p className="text-sm">{movie.overview}</p>
+              <p className="mt-2 font-bold">Streaming Platforms:</p>
+              <p className="text-sm">{movie.streaming_platforms}</p>
+            </div>
+          }
+          arrow
+          placement="top"
+          sx={{
+            "& .MuiTooltip-tooltip": {
+              backgroundColor: "rgba(0, 0, 0, 1.0)", // Darker background
+              color: "#fff", // Keep the text white for contrast
+            },
+            "& .MuiTooltip-arrow": {
+              color: "rgba(0, 0, 0, 1.0)", // Match the arrow color to the background
+            },
+          }}
+        >
+            <Card className="w-full">
+              <CardBody className="p-2 flex flex-row justify-between items-center gap-4">
+                <span className="flex-1 truncate">{movie.title}</span>
+                <div className="flex-shrink-0">
+                  <WatchlistButton
+                    key={`watchlist-${movie.id}`}
+                    movieId={movie.id}
+                    movieTitle={movie.title}
+                  />
                 </div>
               </CardBody>
             </Card>
-          )}
+          </Tooltip>
+        ))}
+      </div>
+    </CardBody>
+  </Card>
+)}
         </div>
       </div>
 

@@ -1,29 +1,37 @@
 # <i> PopcornPicks🍿: Your Destination for Movie Recommendations </i>
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/brwali/PopcornPicks/graphs/commit-activity) [![Contributors Activity](https://img.shields.io/github/commit-activity/m/brwali/PopcornPicks)](https://github.com/brwali/PopcornPicks/pulse) [![GitHub issues](https://img.shields.io/github/issues/brwali/PopcornPicks.svg)](https://github.com/brwali/PopcornPicks/issues?q=is%3Aopen+is%3Aissue) [![GitHub issues-closed](https://img.shields.io/github/issues-closed/brwali/PopcornPicks.svg)](https://github.com/brwali/PopcornPicks/issues?q=is%3Aissue+is%3Aclosed) ![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/brwali/PopcornPicks) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) [![Unittest](https://github.com/brwali/PopcornPicks/actions/workflows/unittest.yml/badge.svg?branch=master&event=push)](https://github.com/brwali/PopcornPicks/actions/workflows/unittest.yml) [![codecov](https://codecov.io/gh/brwali/PopcornPicks/graph/badge.svg?token=0XN6K2DMGS)](https://codecov.io/gh/brwali/PopcornPicks) [![GitHub release](https://img.shields.io/github/release/brwali/PopcornPicks.svg)](https://GitHub.com/brwali/PopcornPicksreleases/) [![StyleCheck: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint) [![HitCount](https://hits.dwyl.com/brwali/PopcornPicks.svg)](https://hits.dwyl.com/brwali/PopcornPicks) ![GitHub contributors](https://img.shields.io/github/contributors/brwali/PopcornPicks) ![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/brwali/PopcornPicks) ![GitHub repo size](https://img.shields.io/github/repo-size/brwali/PopcornPicks) [![Black](https://github.com/brwali/PopcornPicks/actions/workflows/black.yml/badge.svg)](https://github.com/brwali/PopcornPicks/actions/workflows/black.yml) [![Maintainability](https://api.codeclimate.com/v1/badges/260d558f17ae5e1027e5/maintainability)](https://codeclimate.com/github/brwali/PopcornPicks/maintainability) [![GitHub closed issues by-label](https://img.shields.io/github/issues-closed-raw/brwali/PopcornPicks/bug?color=green&label=Squished%20bugs)](https://github.com/brwali/PopcornPicks/issues?q=is%3Aissue+label%3Abug+is%3Aclosed) ![Discord](https://img.shields.io/discord/1143966088695124110) [![DOI](https://zenodo.org/badge/713118657.svg)](https://zenodo.org/doi/10.5281/zenodo.10210915)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://gitHub.com/CSC510-Team87/PopcornPicks/graphs/commit-activity) 
+[![Contributors Activity](https://img.shields.io/github/commit-activity/m/CSC510-Team87/PopcornPicks)](https://github.com/CSC510-Team87/PopcornPicks/pulse) 
+[![GitHub issues](https://img.shields.io/github/issues/CSC510-Team87/PopcornPicks.svg)](https://github.com/CSC510-Team87/PopcornPicks/issues?q=is%3Aopen+is%3Aissue) 
+[![GitHub issues-closed](https://img.shields.io/github/issues-closed/CSC510-Team87/PopcornPicks.svg)](https://github.com/CSC510-Team87/PopcornPicks/issues?q=is%3Aissue+is%3Aclosed) 
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/CSC510-Team87/PopcornPicks) 
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT) 
+[![Unittest](https://github.com/CSC510-Team87/PopcornPicks/actions/workflows/unittest.yml/badge.svg?branch=master&event=push)](https://github.com/CSC510-Team87/PopcornPicks/actions/workflows/unittest.yml) 
+[![codecov](https://codecov.io/gh/brwali/PopcornPicks/graph/badge.svg?token=0XN6K2DMGS)](https://codecov.io/gh/CSC510-Team87/PopcornPicks) 
+[![GitHub release](https://img.shields.io/github/release/CSC510-Team87/PopcornPicks.svg)](https://GitHub.com/CSC510-Team87/PopcornPicksreleases/) 
+[![StyleCheck: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint) 
+[![HitCount](https://hits.dwyl.com/CSC510-Team87/PopcornPicks.svg)](https://hits.dwyl.com/CSC510-Team87/PopcornPicks) 
+![GitHub contributors](https://img.shields.io/github/contributors/CSC510-Team87/PopcornPicks) 
+![GitHub repo size](https://img.shields.io/github/repo-size/CSC510-Team87/PopcornPicks) 
+[![Black](https://github.com/CSC510-Team87/PopcornPicks/actions/workflows/black.yml/badge.svg)](https://github.com/CSC510-Team87/PopcornPicks/actions/workflows/black.yml) 
+[![GitHub closed issues by-label](https://img.shields.io/github/issues-closed-raw/CSC510-Team87/PopcornPicks/bug?color=green&label=Squished%20bugs)](https://github.com/CSC510-Team87/PopcornPicks/issues?q=is%3Aissue+label%3Abug+is%3Aclosed) 
+[![DOI](https://zenodo.org/badge/713118657.svg)](https://zenodo.org/doi/10.5281/zenodo.10210915)
   
 
-  
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/header_display.png" alt="drawing" style="width:1000px;"/>
-<b>PopcornPicks is more than just a movie recommender system; it's a gateway to a world of cinematic adventures. With an ever-expanding library of films and a powerful recommendation algorithm, PopcornPicks is here to transform the way you discover, enjoy, and connect with movies.</b>
+
+<b>PopcornPicks is more than just a movie recommender system. It's a gateway to a world of cinematic adventures. With an ever-expanding library of films and a powerful recommendation algorithm, PopcornPicks is here to transform the way you discover, enjoy, and connect with movies.</b>
 
 # Contents  
 
 - [Why use PopcornPicks?](#why-use-popcornpicks)
 - [Project Documentation](#documentation)
-- [Project Presentation Videos](#project-presentation-video)
+- [Project Presentation Videos](#project-presentation-videos)
 - [Brief Overview of Project](#project-description)
 - [What Docs](#what-docs)
-- [How Docs](#how-docs)<br/>
-    - [Recommendation Mechanism](#movie-recommendation-mechanism)<br/>
-    - [Email Notifier](#email-notifier)
-    - [Create an Acccount](#create-an-account)
-    - [Login to Account](#login-to-account)
-    - [Profile and Friends](#profile-and-friends)
-    - [Wall](#wall)
-- [Improvements Made in the Project](#project-3-delta)
+- [Team 87 Project 3 Enhancements](#team-87-project-3-enhancements)
 - [TechStack Used for the Development of Project](#tech-stack-used)
 - [Steps for Execution](#getting-started)
-- [Future Scope](#future-scope)
+- [Future Proposal](#future-proposal)
 - [Contribute](#contribute-to-the-project)
 - [Team Members](#contributors)
 - [Contact](#contact)
@@ -48,14 +56,14 @@ PopcornPicks: Your movie recommender! Input movies, get tailored suggestions, an
 - **Simple:** Easy installation and setup – start discovering great movies in no time!"
 
 ## Documentation
-Checkout for project documentation [here](https://github.com/brwali/PopcornPicks/tree/master/docs)
+Checkout our project documentation [here](https://github.com/brwali/PopcornPicks/tree/master/docs).
 
 ## Project Presentation Videos
-### New Features 2 minute demo
-[![why contribute video](https://img.youtube.com/vi/QHju8EzQUQ4/0.jpg)](https://www.youtube.com/watch?v=QHju8EzQUQ4)
+### Team 87 Promotional video
+[![promotional video](https://img.youtube.com/vi/A3n7fSBWjXI/sddefault.jpg)](https://youtu.be/A3n7fSBWjXI)
 
-### Why contribute?
-[![why contribute video](https://img.youtube.com/vi/aQ1cryH4B7A/0.jpg)](https://www.youtube.com/watch?v=aQ1cryH4B7A)
+### Team 87 Demo Video
+[![demo video](https://img.youtube.com/vi/PFNtmKUQpv4/sddefault.jpg)](https://youtu.be/PFNtmKUQpv4)
 
 
 ## Project Description
@@ -69,40 +77,13 @@ View our documentation outlining each class and function of PopcornPicks here
 
 View our autogenerated doco here [Doco](https://github.com/brwali/PopcornPicks/blob/master/docs/generated_docs/)
 
-## How docs
 
-### Movie Recommendation Mechanism 
-#### (Modified in project 3)
-**The user selects upto 5 movies to get a tailored watchlist and provide feedback for the same**
-  
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/recommender.png" width="600" height="375">
-
-
-
-### Create an Account
-#### (NEW in project 3)
-**Users can now create accounts, persisting data including their movie reviews and recommendations**
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/signup.png" width="600" height="375">
-
-### Login to account
-#### (NEW in project 3)
-**The user can log in to their account securly with encrypted passwords stored in our database**
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/login.png" width="600" height="375">
-
-### Profile and Friends
-#### (NEW in project 3)
-**The user can add friends, view the movies reviewed by the friends, and see their reviewed movies in their profile**
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/profile.png" width="600" height="375">
-
-### Wall
-#### (NEW in project 3)
-**The user can interact with other users, by viewing a community sourced wall of recent moview reviews**
-<img src="https://github.com/SE-Fall-24-4GPA/PopcornPicks/blob/master/asset/wall.png" width="600" height="375">
-
-## Project 3 Delta
-Check out the significant changes that we made for Project 3 [here](https://github.com/brwali/PopcornPicks/blob/master/proj3/Proj3Changes.md)
-
-Our grading scorecard can be found [here](https://github.com/brwali/PopcornPicks/blob/master/proj3/README.md)
+## Team 87 Project 3 Enhancements
+- Integrated movie descriptions and streaming platform availability into the movie recommendation system.
+- Fixed the AI recommendation system to consider important movie aspects like genre.
+- Integrated a “watchlist” page, where users can seamlessly add recommendations to their watchlist and manage them.
+- Fixed several milestones and tests that were promised in the previous poster but were not actually complete or integrated, as well as failing regression features.
+- Significantly improved documentation as well as streamlined some of the necessary programs to run, making environment setup much more transparent
 
 ## Tech stack Used👨‍💻:
 
@@ -111,12 +92,6 @@ Our grading scorecard can be found [here](https://github.com/brwali/PopcornPicks
 <code><a href="https://www.jquery.com//" target="_blank"><img height="35" src="https://www.vectorlogo.zone/logos/jquery/jquery-horizontal.svg"></a></code>
 <code><a href="https://getbootstrap.com/" target="_blank"><img height="35" src="https://www.vectorlogo.zone/logos/getbootstrap/getbootstrap-ar21.svg"></a></code>
 <code><a href="https://flask.palletsprojects.com/en/1.1.x/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/pocoo_flask/pocoo_flask-ar21.svg"></a></code>
-<!--<code><a href="https://github.com/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/github/github-ar21.svg"></a></code>
- <code><a href="https://git-scm.com/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/git-scm/git-scm-ar21.svg"></a></code>
-<code><a href="https://github.com/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/github/github-ar21.svg"></a></code> -->
-<!-- <code><a href="https://code.visualstudio.com/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/visualstudio_code/visualstudio_code-ar21.svg"></a></code>
-<code><a href="https://www.python.org/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/python/python-ar21.svg"></a></code>-->
-<!-- <code><a href="https://www.python.org/" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/python/python-horizontal.svg"></a></code>-->
 <code><a href="https://www.mysql.com" target="_blank"><img height="50" src="https://www.vectorlogo.zone/logos/mysql/mysql-ar21.svg"></a></code>
 
 
@@ -133,42 +108,45 @@ Our grading scorecard can be found [here](https://github.com/brwali/PopcornPicks
  Step 1: 
   Git Clone the Repository 
   
-    git clone https://github.com/brwali/PopcornPicks.git
+    git clone https://github.com/CSC510-Team87/PopcornPicks.git
     
   (OR) Download the .zip file on your local machine from the following link
   
-    https://github.com/brwali/PopcornPicks
+    https://github.com/CSC510-Team87/PopcornPicks/tree/dev
   
  Step 2:
    Follow the setup instructions in the installation documentation
    
-    https://github.com/brwali/PopcornPicks/blob/master/docs/install.md
+    https://github.com/CSC510-Team87/PopcornPicks/blob/dev/docs/install.md
     
     
 <b>Finally, start enjoying personalized movie recommendations!</b>
 
-## Future Scope
-PopcornPicks is a dynamic project with endless possibilities for expansion and enhancement. Here are some exciting avenues for future development:
-
-
-1. **User Profiles and Preferences**: Continue to improve user profiles. More features could be added with friend interaction, such as ability to send messages. More data on the users could be persisted such as preferences and watch history for a more personalized movie discovery experience.
-
-2. **Integration with Streaming Services**: Integrate with popular streaming services to provide real-time availability information and seamless access to recommended movies.
-  
-3. **Improved Recommendation Algorithm**: Enhance the recommendation engine with more advanced machine learning models and collaborative filtering techniques to provide even more accurate and personalized movie suggestions.
+## Future Proposal
+- Allow for a public chatting forum on movies to allow users to discuss
+- Allow for users to reply to reviews
+- Allow for other social features other than friending, like unfriending, blocking, direct messaging, profile bio, etc.
+- Integrate other cinematic-related features, like associating actors to movies for recommendation, or allowing users to rate directors.
  
-4. **Frontend rework**: Currently the frontend uses jquery, which is a bit dated. As the program becomes more complex, it may be nice to use a component based architecture such as React, Angular, or Blazor.
-
-The future of PopcornPicks is full of potential, and we invite developers, movie lovers, and anyone passionate about cinema to join us in making this platform the ultimate movie companion. 
 
 ## Contribute to the Project!
 
 Please refer to the [CONTRIBUTING.md](https://github.com/brwali/PopcornPicks/blob/master/CONTRIBUTING.md) if you want to contribute to the PopcornPicks source code. Follow all the guidelines mentioned in the same and raise a pull request, we would love to look at it ❤️❤️!
 
 ## Contributors
+
 <table>
   <tr>
-    <td><a href="https://github.com/brwali/PopcornPicks">Project 3</a></td>
+    <td><a href="https://github.com/CSC510-Team87/PopcornPicks">Team 87 Project 3</a></td>
+    <td align="center"><a href=https://github.com/gwenmason125/"><br /><sub><b>Gwen Mason</b></sub></a></td>
+    <td align="center"><a href="https://github.com/yicharlieyi/"><br /><sub><b>Yi Zhang</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/kevindai2002/"><br /><sub><b>Kevin Dai</b></sub></a><br /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td><a href="https://github.com/CSC510-Team87/PopcornPicks">Project 3</a></td>
     <td align="center"><a href="https://github.com/brwali/"><img src="https://avatars.githubusercontent.com/u/144480335?v=4" width="75px;" alt=""/><br /><sub><b>Brandon Walia</b></sub></a></td>
     <td align="center"><a href="https://github.com/nathankohen/"><img src="https://avatars.githubusercontent.com/u/99231385?v=4" width="75px;" alt=""/><br /><sub><b>Nathan Kohen</b></sub></a><br /></td>
     <td align="center"><a href="https://github.com/nfoster1492/"><img src="https://avatars.githubusercontent.com/u/144182217?v=4" width="75px;" alt=""/><br /><sub><b>Nicholas Foster</b></sub></a><br /></td>

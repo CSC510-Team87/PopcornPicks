@@ -100,97 +100,40 @@ def create_movie_genres(movie_genre_df):
     return movie_to_genres
 
 
-def send_email_to_user(recipient_email, categorized_data):
+def send_email(to_email: str, message: str, subject: str):
     """
-    Utility function to send movie recommendations to user over email
+    Sends an email with the specified text to the given email address.
+
+    Args:
+        to_email (str): The recipient's email address.
+        message (str): The message text to send.
+        subject (str): The subject of the email. Defaults to "No Subject".
+
+    Returns:
+        None
     """
+    from_email = "popcornpicks20@gmail.com"
+    password = "ddxkcbdtnfynkoub"
 
-    email_html_content = """
-                        <html>
-                        <head></head>
-                        <body>
-                            <h1 style="color: #333333;">Movie Recommendations from PopcornPicks</h1>
-                            <p style="color: #555555;">Dear Movie Enthusiast,</p>
-                            <p style="color: #555555;">We hope you're having a fantastic day!</p>
-                            <div style="padding: 10px; border: 1px solid #cccccc; border-radius: 5px; background-color: #f9f9f9;">
-                            <h2>Your Movie Recommendations:</h2>
-                            <h3>Movies Liked:</h3>
-                            <ul style="color: #555555;">
-                                {}
-                            </ul>
-                            <h3>Movies Disliked:</h3>
-                            <ul style="color: #555555;">
-                                {}
-                            </ul>
-                            <h3>Movies Yet to Watch:</h3>
-                            <ul style="color: #555555;">
-                                {}
-                            </ul>
-                            </div>
-                            <p style="color: #555555;">Enjoy your movie time with PopcornPicks!</p>
-                            <p style="color: #555555;">Best regards,<br>PopcornPicks Team 🍿</p>
-                        </body>
-                        </html>
-                        """
+    # Setup the MIME
+    email = MIMEMultipart()
+    email['From'] = from_email
+    email['To'] = to_email
+    email['Subject'] = subject
 
-    # Email configuration
-    smtp_server = "smtp.gmail.com"
-    # Port for TLS
-    smtp_port = 587
-    sender_email = "popcornpicks777@gmail.com"
+    # Attach the message body
+    email.attach(MIMEText(message, 'plain'))
 
-    # Use an app password since 2-factor authentication is enabled
-    sender_password = " "
-    subject = "Your movie recommendation from PopcornPicks"
-
-    # Create the email message
-    message = MIMEMultipart("alternative")
-    message["From"] = sender_email
-    message["To"] = recipient_email
-    message["Subject"] = subject
-    # Load the CSV file into a DataFrame
-    movie_genre_df = pd.read_csv("../../data/movies.csv")
-    # Creating movie-genres map
-    movie_to_genres = create_movie_genres(movie_genre_df)
-    # Create the email message with HTML content
-    html_content = email_html_content.format(
-        "\n".join(
-            f'<li>{movie} \
-            {create_colored_tags(movie_to_genres.get(movie, ["Unknown Genre"]))}</li><br>'
-            for movie in categorized_data["Liked"]
-        ),
-        "\n".join(
-            f'<li>{movie} \
-            {create_colored_tags(movie_to_genres.get(movie, ["Unknown Genre"]))}</li><br>'
-            for movie in categorized_data["Disliked"]
-        ),
-        "\n".join(
-            f'<li>{movie} \
-            {create_colored_tags(movie_to_genres.get(movie, ["Unknown Genre"]))}</li><br>'
-            for movie in categorized_data["Yet to Watch"]
-        ),
-    )
-
-    # Attach the HTML email body
-    message.attach(MIMEText(html_content, "html"))
-
-    # Connect to the SMTP server
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        # Start TLS encryption
-        server.starttls()
-        server.login(sender_email, sender_password)
+        # Connect to the SMTP server and send the email
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:  # Replace with your SMTP server if not Gmail
+            server.starttls()  # Secure the connection
+            server.login(from_email, password)
+            server.send_message(email)
 
-        # Send the email
-        server.sendmail(sender_email, recipient_email, message.as_string())
-        logging.info("Email sent successfully!")
-
-    except SMTPException as e:
-        # Handle SMTP-related exceptions
-        logging.error("SMTP error while sending email: %s", str(e))
-
-    finally:
-        server.quit()
+        print(f"Email sent successfully to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 
 def create_account(db, email, username, password):
@@ -219,13 +162,18 @@ def add_friend(db, username, user_id):
 
     if result:
         friend_id = result[0]
+        # Check if the friendship already exists
         executor.execute(
-            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s);",
-            (user_id, friend_id),
+            "SELECT * FROM Friends WHERE (idUsers = %s AND idFriend = %s) OR (idUsers = %s AND idFriend = %s);",
+            (user_id, friend_id, friend_id, user_id)
         )
+        if executor.fetchone():
+            raise ValueError("You are already friends with this user")
+
+        # Insert the friendship record if not exists
         executor.execute(
-            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s);",
-            (friend_id, user_id),
+            "INSERT INTO Friends(idUsers, idFriend) VALUES (%s, %s), (%s, %s);",
+            (user_id, friend_id, friend_id, user_id),
         )
         db.commit()
     else:
@@ -324,28 +272,43 @@ def get_username(db, user):
     return jsonify(result[0][0])
 
 
-def get_recent_friend_movies(db, user):
+def get_recent_friend_movies(db, friend_username):
     """
-    Utility function for getting a certain friends recent movies
+    Fetches a certain friend's recent movies from the database.
     """
-    executor = db.cursor()
-    executor.execute("SELECT idUsers FROM Users WHERE username = %s;", [str(user)])
-    result = executor.fetchall()
-    user_id = result[0][0]
-    executor.execute(
-        "SELECT name, score FROM Ratings AS r JOIN \
-    Movies AS m ON m.idMovies = r.movie_id \
-    WHERE user_id = %s \
-    ORDER BY time DESC \
-    LIMIT 5;",
-        [int(user_id)],
-    )
-    rows = [x[0] for x in executor.description]
-    result = executor.fetchall()
-    json_data = []
-    for r in result:
-        json_data.append(dict(zip(rows, r)))
-    return jsonify(json_data)
+    cursor = db.cursor(dictionary=True)
+    try:
+        # Check if the friend exists and get their user ID
+        cursor.execute("SELECT idUsers FROM Users WHERE username = %s;", (friend_username,))
+        friend = cursor.fetchone()
+
+        if not friend:
+            return jsonify({'error': 'Friend not found'}), 404
+
+        friend_id = friend['idUsers']
+
+        # Fetch the recent movies that the friend has rated
+        cursor.execute(
+            "SELECT m.name AS movie_name, r.score, r.time "
+            "FROM Ratings AS r "
+            "JOIN Movies AS m ON m.idMovies = r.movie_id "
+            "WHERE r.user_id = %s "
+            "ORDER BY r.time DESC "
+            "LIMIT 5;",
+            (friend_id,)
+        )
+        
+        movies = cursor.fetchall()
+
+        if not movies:
+            return jsonify({'message': 'No recent movies found for this friend'}), 200
+
+        return jsonify(movies), 200
+    except Exception as e:
+        print(f"Error fetching friend's movies: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
 
 
 def get_friends(db, user):

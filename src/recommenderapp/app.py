@@ -13,11 +13,13 @@ import sys
 import os
 import jwt
 import datetime
+import pandas as pd
 from flask import Flask, jsonify, render_template, request, g
 from flask_cors import CORS
 import mysql.connector
 import pickle
 from dotenv import load_dotenv
+import logging
 # from utils import (
 #     beautify_feedback_data,
 #     send_email_to_user,
@@ -35,62 +37,71 @@ from utils import get_friends
 from utils import get_username
 from utils import get_recent_movies
 from utils import add_friend
+from utils import get_recent_friend_movies
 from utils import get_wall_posts
 from utils import submit_review
 from utils import create_account
 from utils import login_to_account
 from search import Search
 from item_based import recommend_for_new_user
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from prediction_scripts.model import MovieRecommender
+
 search_instance = Search()
 
 
 sys.path.append("../../")
-
 sys.path.remove("../../")
-
 
 app = Flask(__name__)
 app.secret_key = "secret key"
 
 cors = CORS(app, resources={
     r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 user = {1: None}
 
-load_dotenv()
+DATABASE_CONFIG = {
+    'host': 'localhost',
+    'port': 27276,
+    'user': 'root',
+    'password': 'password',
+    'database': 'popcornpicksdb'
+}
 
-# process this before each request
+
 @app.before_request
 def before_request():
     """
-    Opens the db connection
+    Opens the db connection.
     """
     load_dotenv()
-    try:
-        g.db = mysql.connector.connect(
-            user="avnadmin",
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            database="popcornpicks",
-            port = 27276
-        )
-        if g.db.is_connected():
+    if 'db' not in g:
+        try:
+            g.db = mysql.connector.connect(
+                host=DATABASE_CONFIG['host'],
+                port=DATABASE_CONFIG['port'],
+                user=DATABASE_CONFIG['user'],
+                password=DATABASE_CONFIG['password'],
+                database=DATABASE_CONFIG['database']
+            )
             print("Database connected successfully.")
-        else:
-            print("Database connection failed.")
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+    else:
+        print("Database connection failed.")
 
-# process this after every request
+@app.after_request
 def after_request(response):
-    """
-    Closes the db connecttion
-    """
-    g.db.close()
+    if hasattr(g, 'db') and g.db is not None:
+        g.db.close()
     return response
 
 # test route
@@ -103,8 +114,25 @@ def getUsername():
     """
     Get username of the current user
     """
-    username = get_username(g.db,1)
-    return username
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        username = get_username(g.db,user_id)
+        return username
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/getFriends", methods=["GET"])
@@ -112,33 +140,94 @@ def getFriends():
     """
     Gets friends of the current user
     """
-    friends = get_friends(g.db, 1)
-    return friends
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        friends = get_friends(g.db, user_id)
+        return friends
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/getRecentMovies", methods=["GET"])
 def getRecentMovies():
     """
     Gets recent movies of the current user
     """
-    recent_movies = get_recent_movies(g.db, 1)
-    return recent_movies
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
+    try:
+        recent_movies = get_recent_movies(g.db, user_id)
+        return recent_movies
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/friend", methods=["POST"])
 def add_friend_route():
     data = request.get_json()
     username = data.get("user")  # Friend's username from the request
-    user_id = 1  # Replace this with the actual user's ID, e.g., session or request context
+
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
 
     if not username or not user_id:
-        return jsonify({"error": "Invalid data"}), 400
+        return jsonify({"error": "Invalid data: username is required"}), 400
 
     # Call add_friend with proper user_id
     try:
         add_friend(g.db, username, user_id)
         return jsonify({"message": "Friend added successfully"}), 200
+    except ValueError as e:
+        if str(e) == "Friend not found in the database":
+            return jsonify({"error": str(e)}), 400  # Bad request for not found username
+        else:
+            return jsonify({"error": str(e)}), 409  # Conflict for already existing friendship
+    
+
+@app.route('/getRecentFriendMovies', methods=['GET'])
+def get_recent_friend_movies_route():
+    friend_username = request.args.get("friend")
+    if not friend_username:
+        return jsonify({'error': 'Missing friend username'}), 400
+    
+    try:
+        return get_recent_friend_movies(g.db, friend_username)
     except Exception as e:
-        print(f"Error adding friend: {e}")
-        return jsonify({"error": "Could not add friend"}), 500
+        return jsonify({'error': str(e)}), 500
     
 @app.route("/search", methods=["POST"])
 def search_movies():
@@ -155,8 +244,7 @@ def search_movies():
 
 @app.route("/reviews", methods=["GET"])
 def wall_posts():
-    return get_wall_posts(g.db)
-
+    return get_wall_posts(g.db) 
 
 @app.route("/review", methods=["POST"])
 def review():
@@ -166,8 +254,19 @@ def review():
     if not data or "movie" not in data or "score" not in data or "review" not in data:
         return jsonify({"error": "Invalid or incomplete data"}), 400
     
-    # Replace with the actual user ID or context as needed
-    user_id = 1  # Example user ID, replace with actual session or request context
+    # Get token from header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "No token provided"}), 401
+        
+    token = auth_header.split(' ')[1]
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload['user_id']
+
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     
     try:
         # Submit the review using the provided data
@@ -227,59 +326,284 @@ def login():
         return jsonify({"error": "Login failed, please check your credentials", "status": "fail"}), 401
 
 
-# Load the saved models
-def load_models():
-    try:
-        movies_df = pickle.load(open('../prediction_scripts/artifacts/movie_list.pkl', 'rb'))
-        similarity_matrix = pickle.load(open('../prediction_scripts/artifacts/similarity.pkl', 'rb'))
-        return movies_df, similarity_matrix
-    except Exception as e:
-        print(f"Error loading models: {str(e)}")
-        return None, None
-
-movies_df, similarity_matrix = load_models()
+recommender = MovieRecommender()
+recommender.prepare_data('../../data/movies.csv')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get the list of movies from the request
         data = request.json
         input_movies = data.get('movies', [])
         
         if not input_movies:
             return jsonify({'error': 'No movies provided'}), 400
             
-        # Store for recommendations
         recommendations = set()
-        
-        # Get recommendations for each input movie
+        movie_details = []  # Store both title and ID
+            
         for movie in input_movies:
             try:
-                # Find the movie index
-                movie_index = movies_df[movies_df['title'] == movie].index[0]
-                
-                # Get similarity scores
-                distances = sorted(
-                    list(enumerate(similarity_matrix[movie_index])),
-                    reverse=True,
-                    key=lambda x: x[1]
-                )
-                
-                # Add top 3 recommendations for each input movie
-                for i in distances[1:4]:  # Skip first as it's the movie itself
-                    recommendations.add(movies_df.iloc[i[0]].title)
+                recs = recommender.recommend(movie, 10)
+                for rec in recs:
+                    # Check if this movie title hasn't been processed yet
+                    if rec['title'] not in recommendations:
+                        # Create a new database cursor
+                        cursor = g.db.cursor()
+                        
+                        # Query the Movies table to find if this movie exists
+                        # and get its unique database ID (idMovies)
+                        cursor.execute("SELECT idMovies FROM Movies WHERE name = %s", (rec['title'],))
+                        result = cursor.fetchone()
+                        cursor.close()
+                        
+                        # If the movie was found in the database
+                        if result:
+                            # Get the movie's ID from the result
+                            movie_id = result[0]
+
+                            cursor = g.db.cursor()
+                            cursor.execute("SELECT overview FROM Movies WHERE name = %s", (rec['title'],))
+                            overview = cursor.fetchone()[0]
+                            cursor.close()
+
+                            cursor = g.db.cursor()
+                            cursor.execute("SELECT streaming_platforms FROM Movies WHERE name = %s", (rec['title'],))
+                            streaming_platforms = cursor.fetchone()[0]
+                            cursor.close()
+                            
+                            # Add the title to our set of processed recommendations
+                            # to avoid duplicates
+                            recommendations.add(rec['title'])
+                            
+                            # Add both the ID and title to our final results
+                            movie_details.append({
+                                'id': movie_id,
+                                'title': rec['title'],
+                                'overview': overview,
+                                'streaming_platforms': streaming_platforms.replace("|", ", ")
+                            })
             except IndexError:
                 continue
+         
+        # Limit to top 10
+        top_recommendations = movie_details[:10]
         
-        # Remove any input movies from recommendations
-        recommendations = list(recommendations - set(input_movies))
-        
-        # Return top 10 recommendations
-        return jsonify(recommendations[:10])
-        
+        return jsonify(top_recommendations), 200
+    
     except Exception as e:
+        logging.error(f"Error in prediction: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
+@app.route("/watchlist", methods=["GET"])
+def get_watchlist():
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            # Decode token to get user_id
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])  # Use SECRET_KEY instead of app.config
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor(dictionary=True)
+        query = """
+            SELECT w.id, m.name as title, w.added_date, m.imdb_id
+            FROM Watchlist w
+            JOIN Movies m ON w.movie_id = m.idMovies
+            WHERE w.user_id = %s
+            ORDER BY w.added_date DESC
+        """
+        cursor.execute(query, (user_id,))
+        watchlist = cursor.fetchall()
+        cursor.close()
+
+        # Format the response
+        formatted_watchlist = [{
+            'id': str(item['id']),
+            'title': item['title'],
+            'addedDate': item['added_date'].isoformat() if item['added_date'] else None,
+            'imdbId': item['imdb_id']
+        } for item in watchlist]
+
+        return jsonify(formatted_watchlist)
+
+    except Exception as e:
+        print(f"Error fetching watchlist: {str(e)}")
+        return jsonify({"error": "Failed to fetch watchlist"}), 500
+
+@app.route("/watchlist/<int:movie_id>", methods=["POST"])
+def add_to_watchlist(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            print(f"Processing request for movie_id: {movie_id}")  # Debug log
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+            print(f"User ID from token: {user_id}")  # Debug log
+            
+        except jwt.InvalidTokenError as e:
+            print(f"Token validation failed: {str(e)}")
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        
+        # First verify the movie exists
+        print(f"Checking if movie exists: {movie_id}")  # Debug log
+        movie_check_query = "SELECT idMovies FROM Movies WHERE idMovies = %s"
+        cursor.execute(movie_check_query, (movie_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            return jsonify({"error": f"Movie not found with ID: {movie_id}"}), 404
+
+        # Check if movie is already in watchlist
+        check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(check_query, (user_id, movie_id))
+        if cursor.fetchone():
+            cursor.close()
+            return jsonify({"error": "Movie already in watchlist"}), 400
+
+        # Add to watchlist
+        try:
+            insert_query = """
+                INSERT INTO Watchlist (user_id, movie_id, added_date)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(insert_query, (user_id, movie_id, datetime.datetime.now()))
+            g.db.commit()
+            print(f"Successfully added movie {movie_id} to watchlist for user {user_id}")  # Debug log
+            cursor.close()
+            return jsonify({"message": "Added to watchlist"}), 201
+        except mysql.connector.Error as e:
+            print(f"Database error: {str(e)}")  # Debug log
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    except Exception as e:
+        print(f"Error adding to watchlist: {str(e)}")
+        return jsonify({"error": f"Failed to add to watchlist: {str(e)}"}), 500
+
+@app.route("/watchlist/<int:watchlist_id>", methods=["DELETE"])
+def remove_from_watchlist(watchlist_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+            print(f"Removing watchlist entry {watchlist_id} for user {user_id}")  # Debug log
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        delete_query = "DELETE FROM Watchlist WHERE id = %s AND user_id = %s"
+        cursor.execute(delete_query, (watchlist_id, user_id))
+        g.db.commit()
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            return jsonify({"error": "Watchlist entry not found"}), 404
+            
+        cursor.close()
+        return jsonify({"message": "Removed from watchlist"}), 200
+
+    except Exception as e:
+        print(f"Error removing from watchlist: {str(e)}")
+        return jsonify({"error": "Failed to remove from watchlist"}), 500
+
+@app.route("/watchlist/check/<int:movie_id>", methods=["GET"])
+def check_watchlist_status(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+            print(f"Checking watchlist for user {user_id}, movie {movie_id}")  # Debug log
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        
+        # First check if movie exists in database
+        movie_check_query = "SELECT idMovies FROM Movies WHERE idMovies = %s"
+        cursor.execute(movie_check_query, (movie_id,))
+        movie_exists = cursor.fetchone()
+        
+        if not movie_exists:
+            print(f"Movie {movie_id} not found in database")  # Debug log
+            cursor.close()
+            return jsonify({
+                "error": f"Movie not found with ID: {movie_id}",
+                "exists": False
+            }), 404
+
+        # Then check watchlist status
+        check_query = "SELECT id FROM Watchlist WHERE user_id = %s AND movie_id = %s"
+        cursor.execute(check_query, (user_id, movie_id))
+        result = cursor.fetchone()
+        cursor.close()
+
+        print(f"Watchlist check result for movie {movie_id}: {bool(result)}")  # Debug log
+        
+        return jsonify({
+            "isInWatchlist": bool(result),
+            "exists": True
+        })
+
+    except Exception as e:
+        print(f"Error checking watchlist status: {str(e)}")
+        return jsonify({
+            "error": "Failed to check watchlist status",
+            "details": str(e)
+        }), 500
+
+@app.route("/watchlist/movie/<int:movie_id>", methods=["DELETE"])
+def remove_from_watchlist_by_movie(movie_id):
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = payload['user_id']
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        cursor = g.db.cursor()
+        delete_query = "DELETE FROM Watchlist WHERE movie_id = %s AND user_id = %s"
+        cursor.execute(delete_query, (movie_id, user_id))
+        g.db.commit()
+        cursor.close()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Movie not found in watchlist"}), 404
+
+        return jsonify({"message": "Removed from watchlist"}), 200
+
+    except Exception as e:
+        print(f"Error removing from watchlist: {str(e)}")
+        return jsonify({"error": "Failed to remove from watchlist"}), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3001, debug=True)

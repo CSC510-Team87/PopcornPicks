@@ -61,6 +61,7 @@ export default function ReviewPage() {
   };
 
   const handleSubmitReview = async () => {
+    
     if (!selectedMovie) {
       setAlertState({
         show: true,
@@ -79,10 +80,13 @@ export default function ReviewPage() {
     }
 
     try {
+      const token = localStorage.getItem('token');
+      
       const response = await fetch('http://localhost:3001/review', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           movie: selectedMovie,

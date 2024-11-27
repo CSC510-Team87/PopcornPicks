@@ -361,6 +361,22 @@ $(document).ready(function () {
 		goToReview();
 	});
 
+	// Function to handle Watchlist button click
+	function goToWatchlist() {
+		// Navigate to the search page
+		$("#loaderLanding").attr("class", "d-flex justify-content-center")
+		$("#centralDivLanding").hide()
+		$("#landingTopNav").hide()
+		setTimeout(function () {
+			window.location.href = "/watchlist" // Replace with the actual URL of your search page
+		}, 2000)
+	}
+
+	// Bind the watchlist function to the Watchlist button click
+	$("#goToWatchlistButton").click(function () {
+		goToWatchlist();
+	});
+
 	// Function to handle Profile button click
 	function goToProfile() {
 		// Navigate to the search page
