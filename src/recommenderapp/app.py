@@ -37,6 +37,7 @@ from utils import get_friends
 from utils import get_username
 from utils import get_recent_movies
 from utils import add_friend
+from utils import get_recent_friend_movies
 from utils import get_wall_posts
 from utils import submit_review
 from utils import create_account
@@ -215,6 +216,18 @@ def add_friend_route():
             return jsonify({"error": str(e)}), 400  # Bad request for not found username
         else:
             return jsonify({"error": str(e)}), 409  # Conflict for already existing friendship
+    
+
+@app.route('/getRecentFriendMovies', methods=['GET'])
+def get_recent_friend_movies_route():
+    friend_username = request.args.get("friend")
+    if not friend_username:
+        return jsonify({'error': 'Missing friend username'}), 400
+    
+    try:
+        return get_recent_friend_movies(g.db, friend_username)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     
 @app.route("/search", methods=["POST"])
 def search_movies():

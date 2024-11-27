@@ -58,13 +58,17 @@ export default function ProfilePage() {
 
   const showFriendMovies = (friendName: string) => {
     if (recentFriendMovies[friendName]) {
-      setRecentFriendMovies((prev) => ({ ...prev, [friendName]: [] }));
+        setRecentFriendMovies((prev) => ({ ...prev, [friendName]: [] }));
     } else {
-      axios.post("http://127.0.0.1:3001/getRecentFriendMovies", { friend: friendName }).then((response) => {
-        setRecentFriendMovies((prev) => ({ ...prev, [friendName]: response.data }));
-      });
+        axios.get(`http://127.0.0.1:3001/getRecentFriendMovies?friend=${encodeURIComponent(friendName)}`)
+            .then((response) => {
+                setRecentFriendMovies((prev) => ({ ...prev, [friendName]: response.data }));
+            })
+            .catch((error) => {
+                console.error("Failed to fetch friend's movies:", error);
+            });
     }
-  };
+};
 
   const addFriend = (username: string) => {
   // Prevent adding oneself as a friend
@@ -141,10 +145,10 @@ return (
                 {friend}
               </Button>
               {recentFriendMovies[friend] && (
-                <div className="absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg p-4 z-10">
+                <div className="absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg p-1 z-10">
                   {recentFriendMovies[friend].map((movie, idx) => (
                     <p key={idx} className="text-gray-700">
-                      {movie.name}: {movie.score}/10 stars
+                      {movie.movie_name}: {Array.from({ length: 10 }, (_, i) => i < movie.score ? '★' : '☆').join('')}
                     </p>
                   ))}
                 </div>
